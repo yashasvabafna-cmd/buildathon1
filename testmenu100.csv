@@ -1,0 +1,101 @@
+id,item_name,price,category
+1,Classic Burger,6.99,main
+2,Cheese Burger,7.49,main
+3,Bacon Burger,7.99,main
+4,Veggie Burger,6.49,main
+5,Mushroom Swiss Burger,7.59,main
+6,BBQ Burger,7.79,main
+7,Spicy Chicken Burger,7.29,main
+8,Grilled Chicken Burger,7.49,main
+9,Double Patty Burger,8.49,main
+10,Black Bean Burger,6.99,main
+11,French Fries,2.49,side
+12,Curly Fries,2.99,side
+13,Sweet Potato Fries,3.29,side
+14,Cheese Fries,3.49,side
+15,Loaded Fries,4.49,side
+16,Garlic Fries,3.59,side
+17,Truffle Fries,4.99,side
+18,Waffle Fries,3.99,side
+19,Cajun Fries,3.79,side
+20,Chili Cheese Fries,4.59,side
+21,Caesar Salad,5.99,main
+22,Greek Salad,6.49,main
+23,Garden Salad,5.49,main
+24,Cobb Salad,6.99,main
+25,Spinach Salad,6.29,main
+26,Kale Salad,6.49,main
+27,Southwest Salad,6.79,main
+28,Quinoa Salad,6.59,main
+29,Caprese Salad,5.99,main
+30,Asian Sesame Salad,6.39,main
+31,Margherita Pizza,9.99,main
+32,Pepperoni Pizza,10.49,main
+33,BBQ Chicken Pizza,10.99,main
+34,Veggie Pizza,9.49,main
+35,Hawaiian Pizza,10.29,main
+36,Meat Lovers Pizza,11.49,main
+37,Four Cheese Pizza,10.19,main
+38,Mushroom Pizza,9.99,main
+39,White Pizza,10.69,main
+40,Buffalo Chicken Pizza,11.29,main
+41,Chicken Tenders,5.49,appetizer
+42,Mozzarella Sticks,4.99,appetizer
+43,Onion Rings,4.79,appetizer
+44,Jalapeño Poppers,5.29,appetizer
+45,Garlic Bread,3.99,appetizer
+46,Spinach Artichoke Dip,6.49,appetizer
+47,Stuffed Mushrooms,5.99,appetizer
+48,Bruschetta,4.59,appetizer
+49,Nachos,6.29,appetizer
+50,Deviled Eggs,4.49,appetizer
+51,Cola,1.99,beverage
+52,Diet Cola,1.99,beverage
+53,Lemonade,2.49,beverage
+54,Iced Tea,2.29,beverage
+55,Sweet Tea,2.29,beverage
+56,Orange Juice,2.79,beverage
+57,Apple Juice,2.79,beverage
+58,Bottled Water,1.49,beverage
+59,Sparkling Water,1.99,beverage
+60,Root Beer,2.49,beverage
+61,Chocolate Cake,4.99,dessert
+62,Cheesecake,5.49,dessert
+63,Brownie,4.49,dessert
+64,Ice Cream,3.99,dessert
+65,Apple Pie,4.99,dessert
+66,Banana Split,5.99,dessert
+67,Tiramisu,6.29,dessert
+68,Pecan Pie,4.29,dessert
+69,Chocolate Chip Cookie,2.99,dessert
+70,Strawberry Shortcake,5.49,dessert
+71,Mac & Cheese,3.99,side
+72,Baked Beans,2.99,side
+73,Mashed Potatoes,3.49,side
+74,Coleslaw,2.49,side
+75,Cornbread,2.99,side
+76,Potato Wedges,3.49,side
+77,Steamed Broccoli,3.29,side
+78,Grilled Corn,3.79,side
+79,Side Salad,3.99,side
+80,Fruit Cup,3.69,side
+81,Iced Coffee,2.99,beverage
+82,Hot Coffee,2.49,beverage
+83,Latte,3.99,beverage
+84,Espresso,2.29,beverage
+85,Cappuccino,3.49,beverage
+86,Milkshake - Vanilla,4.99,beverage
+87,Milkshake - Chocolate,5.49,beverage
+88,Milkshake - Strawberry,5.49,beverage
+89,Smoothie - Berry,4.99,beverage
+90,Smoothie - Mango,4.99,beverage
+91,Chicken Alfredo,10.49,main
+92,Beef Lasagna,11.29,main
+93,Grilled Salmon,12.49,main
+94,Steak Frites,13.99,main
+95,Vegetable Stir Fry,9.49,main
+96,Shrimp Scampi,12.99,main
+97,Tofu Bowl,9.99,main
+98,Pulled Pork Sandwich,8.49,main
+99,Philly Cheesesteak,10.99,main
+100,Chicken Parmesan,11.49,main
