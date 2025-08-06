@@ -2,21 +2,13 @@ import numpy as np
 import pandas as pd
 from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
-from pydantic import BaseModel
-from typing import List
+from Classes import Item, Order, OrderUpdate
 from langchain.output_parsers import PydanticOutputParser
 from sentence_transformers import SentenceTransformer
 
 from warnings import filterwarnings
 filterwarnings("ignore")
 
-class Item(BaseModel):
-    item_name: str
-    quantity: int
-    modifiers: List[str] = []
-
-class Order(BaseModel):
-    items: List[Item]
 
 # make test menu
 menu = pd.DataFrame({'itemid': [1, 2, 3, 4, 5, 6, 7, 8], 
@@ -75,3 +67,4 @@ for item in result.items:
         print(f'No good match for {item.item_name}')
     else:
         print(f'Best match for {item.item_name}: {best_match["name"]}, score - {score:.4f}')
+
