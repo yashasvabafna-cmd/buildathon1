@@ -8,7 +8,7 @@ from typing import List
 from langchain.output_parsers import PydanticOutputParser
 from sentence_transformers import SentenceTransformer
 
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
 
@@ -30,19 +30,19 @@ parser = PydanticOutputParser(pydantic_object=Order)
 menu = pd.read_csv("testmenu100.csv")
 
 
-chatbot = ChatOllama(model="llama3")
+llm = ChatOllama(model="llama3")
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", """
-                You are an order-taking assistant. Extract the customer's order from the input. 
-                Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names.
-                Only return valid output in this format: {format_instructions}
-                Do not include any additional text or explanations.
+                1. You are an order-taking assistant. Extract the customer's order from the input. 
+                2. Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names.
+                3. Only return valid JSON output in this format: {format_instructions}
+                4. NEVER include any additional text or explanations, preceding or following the JSON.
                 """),
     ("human", "{user_input}")
 ])
 
-chain = prompt | chatbot | parser
+chain = prompt | llm | parser
 
 
 docs = [
@@ -75,8 +75,7 @@ conversationPrompt = ChatPromptTemplate(
     ]
 )
 
-convllm = ChatOllama(model="llama3")
-conversationChain = conversationPrompt | convllm
+conversationChain = conversationPrompt | llm
 
 
 # instead of using this we could train a simple classification model based on embeddings of the input.
@@ -116,7 +115,7 @@ Output:
 """
 )
 
-routerChain = routerPrompt | routerbot
+routerChain = routerPrompt | llm
 
 chat_history = []
 
@@ -141,7 +140,7 @@ while True:
 
     routerResponse = routerChain.invoke({"user_input": user_input})
 
-    if routerResponse.strip() == "order":
+    if routerResponse.content.strip() == "order":
         print('ORDER DETECTED')
         ai_response = chain.invoke({
             "user_input": user_input,
@@ -164,9 +163,12 @@ while True:
                 print(f'No good match for {item.item_name}')
             else:
                 print(f'Best match for {item.item_name}: {best_match["item_name"]}, score - {score:.4f}')
-            # chat_history.append(AIMessage(content=ai_response.model_dump_json()))
+                temp_item = Item(item_name=best_match["item_name"], quantity=item.quantity, modifiers=item.modifiers)
+                activeOrder.items.append(temp_item)
 
-    elif routerResponse.strip() == "conversation":
+            chat_history.append(AIMessage(content=ai_response.model_dump_json()))
+
+    elif routerResponse.content.strip() == "conversation":
         print('CONVERSATION DETECTED')
         rel_docs, context = get_context(user_input)
         if len(rel_docs) == 0:
@@ -183,3 +185,4 @@ while True:
     else:
         print(f"Router output not recognized - {routerResponse}")
   
+print(f"final order - {[item for item in activeOrder]}")
