@@ -1,0 +1,3 @@
+order_id,item_name,quantity,modifiers,id,price,category,ingredients
+1,Root Beer,1,,60,2.49,beverage,"Carbonated water, Sugar, Sassafras flavoring, Spices"
+1,Vanilla Ice Cream,1,,,,,
