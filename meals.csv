@@ -1,0 +1,101 @@
+meal_id,name,type,category,price,Chef_chef_id
+1,Paneer Tikka 786,veg,Starter,679.76,103
+2,Vegetable Samosa 831,veg,Starter,219.27,102
+3,Onion Bhaji 849,veg,Starter,314.63,102
+4,Hara Bhara Kebab 505,veg,Starter,417.73,102
+5,Gobi Manchurian 612,veg,Starter,243.94,101
+6,Crispy Corn 278,veg,Starter,423.83,102
+7,Dahi Ke Kebab 847,veg,Starter,586.91,103
+8,Aloo Tikki 491,veg,Starter,273.55,103
+9,Chicken Tikka 305,non-veg,Starter,776.06,102
+10,Seekh Kebab 846,non-veg,Starter,332.46,103
+11,Fish Amritsari 357,non-veg,Starter,685.77,103
+12,Prawn Fry 38,non-veg,Starter,438.86,101
+13,Mutton Shammi Kebab 125,non-veg,Starter,763.91,103
+14,Chicken 65 238,non-veg,Starter,183.12,102
+15,Chilli Chicken Dry 2,non-veg,Starter,659.98,102
+16,Paneer Butter Masala 799,veg,Main Course,448.5,103
+17,Paneer Butter Masala 885,veg,Main Course,639.88,102
+18,Paneer Butter Masala 682,veg,Main Course,767.79,103
+19,Dal Makhani 680,veg,Main Course,413.0,102
+20,Dal Makhani 407,veg,Main Course,704.75,102
+21,Dal Makhani 939,veg,Main Course,312.47,103
+22,Malai Kofta 797,veg,Main Course,242.93,101
+23,Malai Kofta 893,veg,Main Course,435.53,103
+24,Malai Kofta 447,veg,Main Course,240.63,102
+25,Mix Vegetable Curry 981,veg,Main Course,784.67,103
+26,Mix Vegetable Curry 545,veg,Main Course,420.93,103
+27,Mix Vegetable Curry 633,veg,Main Course,197.08,102
+28,Chana Masala 787,veg,Main Course,623.3,101
+29,Chana Masala 280,veg,Main Course,440.22,102
+30,Chana Masala 876,veg,Main Course,306.88,102
+31,Aloo Gobi 264,veg,Main Course,691.04,101
+32,Aloo Gobi 722,veg,Main Course,591.02,101
+33,Aloo Gobi 339,veg,Main Course,462.95,101
+34,Palak Paneer 423,veg,Main Course,589.89,102
+35,Palak Paneer 405,veg,Main Course,246.15,101
+36,Palak Paneer 489,veg,Main Course,552.98,103
+37,Kadai Paneer 906,veg,Main Course,377.63,102
+38,Kadai Paneer 658,veg,Main Course,271.52,103
+39,Kadai Paneer 382,veg,Main Course,310.21,102
+40,Navratan Korma 151,veg,Main Course,188.45,101
+41,Navratan Korma 143,veg,Main Course,305.11,103
+42,Navratan Korma 33,veg,Main Course,703.63,101
+43,Baingan Bharta 152,veg,Main Course,567.31,101
+44,Baingan Bharta 305,veg,Main Course,648.06,102
+45,Baingan Bharta 809,veg,Main Course,516.13,103
+46,Veg Kofta Curry 485,veg,Main Course,742.16,103
+47,Veg Kofta Curry 478,veg,Main Course,481.58,102
+48,Veg Kofta Curry 619,veg,Main Course,438.46,103
+49,Mushroom Do Pyaza 527,veg,Main Course,587.06,101
+50,Mushroom Do Pyaza 333,veg,Main Course,219.19,103
+51,Mushroom Do Pyaza 181,veg,Main Course,758.66,102
+52,Butter Chicken 248,non-veg,Main Course,694.03,103
+53,Butter Chicken 624,non-veg,Main Course,701.13,101
+54,Chicken Tikka Masala 418,non-veg,Main Course,481.3,101
+55,Chicken Tikka Masala 589,non-veg,Main Course,525.4,101
+56,Mutton Rogan Josh 788,non-veg,Main Course,612.9,101
+57,Mutton Rogan Josh 26,non-veg,Main Course,158.9,103
+58,Fish Curry 935,non-veg,Main Course,442.98,102
+59,Fish Curry 227,non-veg,Main Course,437.18,103
+60,Prawn Malai Curry 840,non-veg,Main Course,498.39,103
+61,Prawn Malai Curry 726,non-veg,Main Course,637.36,103
+62,Chicken Korma 311,non-veg,Main Course,326.73,101
+63,Chicken Korma 119,non-veg,Main Course,589.02,103
+64,Laal Maas 758,non-veg,Main Course,298.64,103
+65,Laal Maas 203,non-veg,Main Course,371.93,102
+66,Goan Fish Curry 951,non-veg,Main Course,671.94,102
+67,Goan Fish Curry 407,non-veg,Main Course,620.75,102
+68,Hydrabadi Chicken Biryani 218,non-veg,Main Course,751.53,103
+69,Hydrabadi Chicken Biryani 340,non-veg,Main Course,397.39,101
+70,Mutton Biryani 769,non-veg,Main Course,774.39,103
+71,Mutton Biryani 514,non-veg,Main Course,586.22,103
+72,Chicken Chettinad 268,non-veg,Main Course,358.75,101
+73,Chicken Chettinad 455,non-veg,Main Course,222.28,101
+74,Dum Aloo Kashmiri 517,veg,Specialty,223.52,102
+75,Bharwan Bhindi 597,veg,Specialty,157.58,101
+76,Sarson Ka Saag 492,veg,Specialty,334.34,102
+77,Dal Bukhara 130,veg,Specialty,684.19,101
+78,Veg Kolhapuri 51,veg,Specialty,531.71,103
+79,Shahi Paneer 123,veg,Specialty,579.66,103
+80,Nalli Nihari 336,non-veg,Specialty,722.0,101
+81,Raan Musallam 907,non-veg,Specialty,774.95,102
+82,Amritsari Kulcha with Chole (Non-Veg option) 403,non-veg,Specialty,758.53,101
+83,Kerala Fish Moilee 314,non-veg,Specialty,362.59,102
+84,Awadhi Mutton Korma 498,non-veg,Specialty,324.2,102
+85,Gulab Jamun 155,veg,Dessert,767.67,102
+86,Gulab Jamun 118,veg,Dessert,506.34,101
+87,Rasgulla 857,veg,Dessert,714.0,103
+88,Rasgulla 73,veg,Dessert,522.77,102
+89,Gajar Halwa 161,veg,Dessert,358.91,102
+90,Gajar Halwa 487,veg,Dessert,262.59,102
+91,Moong Dal Halwa 720,veg,Dessert,513.59,102
+92,Moong Dal Halwa 398,veg,Dessert,490.03,103
+93,Kulfi (Pistachio) 891,veg,Dessert,652.53,103
+94,Kulfi (Pistachio) 906,veg,Dessert,283.64,102
+95,Jalebi with Rabri 806,veg,Dessert,707.14,101
+96,Jalebi with Rabri 779,veg,Dessert,706.83,101
+97,Phirni 165,veg,Dessert,224.02,102
+98,Phirni 993,veg,Dessert,534.3,102
+99,Shahi Tukda 665,veg,Dessert,248.52,102
+100,Shahi Tukda 729,veg,Dessert,269.16,101
