@@ -26,7 +26,11 @@ conversationPrompt = ChatPromptTemplate(
 )
 
 agentPrompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a restaurant assistant that takes orders or answers menu questions. You have access to two tools for these functions."),
+    ("system", """
+     You are a restaurant assistant that takes orders or answers menu questions. You have access to two tools for these functions.
+     1. extract_order: Call this tool ONLY when the user is ordering food by saying something like "I want ..." or "I would like ..." or "Give me ...". It will return structured output.
+     2. menu_query: Call this tool when the user asks a question about the menu, like "What is on the menu?" or "What do you have?". Also use this tool when the user is making general requests or conversation.
+     """),
     MessagesPlaceholder("messages"),
-    MessagesPlaceholder("agent_scratchpad")
+    MessagesPlaceholder("intermediate_steps")
 ])

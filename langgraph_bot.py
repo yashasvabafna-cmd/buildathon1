@@ -1,9 +1,11 @@
 from typing import Annotated
 from typing_extensions import TypedDict
 import pandas as pd
+import pprint
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
+from operator import add
 
 from langchain.chat_models import init_chat_model
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
@@ -11,8 +13,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage
 
 from langchain_core.tools import tool
-from langchain.agents import create_tool_calling_agent
-from langchain.agents import AgentExecutor
+from langgraph.prebuilt import create_react_agent
 
 from promptstore import orderPrompt, conversationPrompt, agentPrompt
 from Classes import Item, Order
@@ -25,7 +26,7 @@ warnings.filterwarnings("ignore")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
-    intermediate_steps: list
+    intermediate_steps: Annotated[list, add]
 
 
 parser = PydanticOutputParser(pydantic_object=Order)
@@ -68,25 +69,28 @@ tools = [extract_order, menu_query]
 #     nvidia_api_key="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")
 # print(llm.invoke("hello").content)
 
-agent = create_tool_calling_agent(llm=llm, tools=tools, prompt=agentPrompt)
-agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools)
+agent = create_react_agent(model=llm, tools=tools, prompt=agentPrompt)
+# agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools)
 
 
 # use ChatNVIDIA when bug is resolved
 
-class AgentState(TypedDict):
-    messages: Annotated[list, add_messages]
-
-def agent_node(state: AgentState):
+def agent_node(state: State):
     messages = state["messages"]
-    response = agent_executor.invoke({"messages": messages})
-    print(f"Agent response: {response}")
-    state["messages"].append(response)
-    return state
+    print(state["messages"])
+    print(state["intermediate_steps"])
+    response = agent.invoke({"messages": messages, "intermediate_steps": state["intermediate_steps"]})
+    
+    for x in response:
+        print(f"type - {type(x)}")
+        for y in x:
+            print(y)
+        print()
 
-graph = StateGraph(AgentState)
+graph = StateGraph(State)
 graph.add_node("agent", agent_node)
 graph.set_entry_point("agent")
+graph.add_edge(START, "agent")
 graph.add_edge("agent", END)
 
 agent_graph = graph.compile()
@@ -104,18 +108,9 @@ while True:
     if user_input.lower() in {"quit", "exit"}:
         print("Chatbot: Goodbye!")
         break
+    
+    state["messages"].append({"role": "user", "content": user_input})
 
-    # state["messages"].append(HumanMessage(role="human", content=user_input))
-
-    # for step in agent_graph.stream(state):
-    #     state.update(step)
-    #     print(step)
-    #     # for value in step.values():
-    #     #     for msg in value.get("messages", []):
-    #     #         print(f"Chatbot: {msg.content}")
-
-    for event in agent_executor.stream(
-    {"messages": [{"role": "user", "content": user_input}]},
-    config=config
-    ):
-        event["messages"][-1].pretty_print()
+    for update in agent_graph.stream(state, config=config):
+        #print(update)
+        print("placeholder")
