@@ -1,0 +1,79 @@
+item_number,item_name,category,ingredients
+1,Classic Burger,Burgers,"Beef patties, Buns, Lettuce, Tomato, Cheese (optional)"
+2,Cheese Burger,Burgers,"Beef patties, Buns, Lettuce, Tomato, Cheese"
+3,Bacon Burger,Burgers,"Beef patties, Buns, Lettuce, Tomato, Bacon, Cheese (optional)"
+4,Veggie Burger,Burgers,"Patty made from plant-based ingredients (e.g., black beans, mushrooms, etc.), Buns, Lettuce, Tomato, Avocado (optional)"
+5,Mushroom Swiss Burger,Burgers,"Beef patties, Buns, Lettuce, Tomato, Mushrooms, Swiss cheese"
+6,BBQ Burger,Burgers,"Beef patties, Buns, Lettuce, Tomato, BBQ sauce"
+7,Spicy Chicken Burger,Burgers,"Chicken breast patty, Buns, Lettuce, Tomato, Jalapeños (optional)"
+8,Grilled Chicken Burger,Burgers,"Chicken breast patty, Buns, Lettuce, Tomato"
+9,Double Patty Burger,Burgers,"Two beef patties, Buns, Lettuce, Tomato"
+10,Black Bean Burger,Burgers,"Patty made from black beans, Buns, Lettuce, Tomato"
+11,French Fries,Fries,"Potatoes, Oil"
+12,Curly Fries,Fries,"Potatoes, Oil"
+13,Sweet Potato Fries,Fries,"Sweet potatoes, Oil"
+14,Cheese Fries,Fries,"French fries, Shredded cheese (e.g., cheddar, mozzarella)"
+15,Loaded Fries,Fries,"French fries, Shredded cheese (e.g., cheddar, mozzarella), Bacon bits (optional)"
+16,Garlic Fries,Fries,"French fries, Garlic powder or roasted garlic"
+17,Truffle Fries,Fries,"French fries, Truffle oil"
+18,Waffle Fries,Fries,"Potatoes, Oil"
+19,Cajun Fries,Fries,"French fries, Cajun seasoning (e.g., paprika, cayenne pepper)"
+20,Chili Cheese Fries,Fries,"French fries, Shredded cheese (e.g., cheddar, mozzarella), Chili"
+21,Caesar Salad,Salads,"Romaine lettuce, Croutons, Parmesan cheese, Anchovy dressing or Caesar dressing"
+22,Greek Salad,Salads,"Mixed greens, Tomatoes, Cucumber, Red onion, Feta cheese, Kalamata olives"
+23,Garden Salad,Salads,"Mixed greens, Tomatoes, Cucumber, Carrots"
+24,Cobb Salad,Salads,"Romaine lettuce, Chicken breast, Bacon, Avocado, Hard-boiled egg"
+25,Spinach Salad,Salads,"Baby spinach leaves, Tomatoes, Mushrooms, Feta cheese"
+26,Kale Salad,Salads,"Curly kale leaves, Citrus segments (e.g., orange, lemon)"
+27,Southwest Salad,Salads,"Mixed greens, Black beans, Corn kernels, Diced tomatoes, Cilantro"
+28,Quinoa Salad,Salads,"Cooked quinoa, Roasted vegetables (e.g., broccoli, sweet potatoes)"
+29,Caprese Salad,Salads,"Fresh mozzarella cheese, Tomatoes, Basil leaves"
+30,Asian Sesame Salad,Salads,"Mixed greens, Edamame, Cucumber, Carrots"
+31,Margherita Pizza,Pizzas,"Crust, Tomato sauce, Fresh mozzarella cheese, Fresh basil leaves"
+32,Pepperoni Pizza,Pizzas,"Crust, Tomato sauce, Mozzarella cheese, Pepperoni slices"
+33,BBQ Chicken Pizza,Pizzas,"Crust, BBQ sauce, Grilled chicken breast, Red onion"
+34,Veggie Pizza,Pizzas,"Crust, Tomato sauce, Roasted vegetables (e.g., bell peppers, mushrooms)"
+35,Hawaiian Pizza,Pizzas,"Crust, Tomato sauce, Ham or Canadian bacon, Pineapple rings"
+36,Meat Lovers Pizza,Pizzas,"Crust, Tomato sauce, Pepperoni slices, Sausage, Bacon"
+37,Four Cheese Pizza,Pizzas,"Crust, Tomato sauce, Mozzarella cheese, Parmesan cheese, Cheddar cheese"
+38,Mushroom Pizza,Pizzas,"Crust, Tomato sauce, Mushrooms"
+39,White Pizza,Pizzas,"Crust, Garlic butter or olive oil, Ricotta cheese"
+40,Buffalo Chicken Pizza,Pizzas,"Crust, BBQ sauce, Grilled chicken breast, Blue cheese crumbles"
+41,Mozzarella Sticks,Appetizers,Breaded mozzarella cheese sticks
+42,Onion Rings,Appetizers,Sliced onions coated with flour and fried
+43,Jalapeño Poppers,Appetizers,Jalapeño peppers filled with cream cheese and breaded
+44,Garlic Bread,Appetizers,French bread loaf topped with garlic butter
+45,Chocolate Cake,Desserts,Moist chocolate cake made with dark chocolate
+46,Cheesecake,Desserts,"Creamy cheesecake made with heavy cream, sugar, and graham cracker crust"
+47,Brownie,Desserts,Fudgy brownie made with dark chocolate and walnuts (optional)
+48,Ice Cream,Desserts,Vanilla or other flavors of ice cream
+49,Apple Pie,Desserts,Classic apple pie filled with cinnamon-spiced apples and topped with a flaky crust
+50,Banana Split,Desserts,"Fresh banana topped with scoops of ice cream, chocolate sauce, whipped cream, and chopped nuts"
+51,Tiramisu,Desserts,Ladyfingers soaked in coffee liqueur and layered with mascarpone cheese
+52,Pecan Pie,Desserts,"Rich pecan pie filled with brown sugar, melted butter, and toasted pecans"
+53,Chocolate Chip Cookie,Desserts,Soft-baked cookie made with dark chocolate chips and walnuts (optional)
+54,Strawberry Shortcake,Desserts,Fresh strawberries layered with whipped cream and sweet biscuits
+55,Cola,Beverages,Carbonated cola soft drink
+56,Diet Cola,Beverages,Sugar-free version of cola soft drink
+57,Lemonade,Beverages,Freshly squeezed lemon juice mixed with sugar and water
+58,Iced Tea,Beverages,Brewed tea served over ice
+59,Sweet Tea,Beverages,Sweetened iced tea made with sugar and black tea
+60,Orange Juice,Beverages,Freshly squeezed orange juice
+61,Apple Juice,Beverages,Freshly squeezed apple juice
+62,Bottled Water,Beverages,Purified water bottled for convenience
+63,Sparkling Water,Beverages,Carbonated water with added flavorings (optional)
+64,Root Beer,Beverages,"Creamy, sweet root beer soft drink"
+65,Mashed Potatoes,Sides,Boiled potatoes mashed with butter and milk
+66,Baked Beans,Sides,Canned beans baked in a sweet tomato-based sauce
+67,Coleslaw,Sides,"Shredded cabbage mixed with mayonnaise, vinegar, and spices"
+68,Cornbread,Sides,"Moist cornbread made with yellow cornmeal, flour, and butter"
+69,Potato Wedges,Sides,Baked potato wedges seasoned with herbs and spices
+70,Steamed Broccoli,Sides,Fresh broccoli florets steamed to tender perfection
+71,Grilled Corn,Sides,Fresh corn on the cob grilled over an open flame
+72,Side Salad,Sides,"Mixed greens served with a variety of toppings (e.g., cheese, nuts, fruit)"
+73,Fruit Cup,Sides,Fresh fruit arranged in a cup for a healthy snack
+74,Iced Coffee,Sides,Brewed coffee served over ice
+75,Mac & Cheese,Breakfast Items,Creamy macaroni and cheese with added crispy bacon or scrambled eggs
+76,Deviled Eggs,Breakfast Items,"Hard-boiled egg yolks mixed with mayonnaise, mustard, and seasonings"
+77,Pulled Pork Sandwich,Sandwiches,"Pulled pork, Buns, Coleslaw (optional), Pickle slices (optional)"
+78,Philly Cheesesteak,Sandwiches,"Thinly sliced beef or chicken breast, Sauteed onions and bell peppers, Melted cheese (e.g., cheddar, provolone), Soft sub roll"

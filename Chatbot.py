@@ -83,7 +83,3 @@ while True:
             chat_history.pop()
 
     print("-" * 60)
-
-count_df = order.count_ordered_items(DummyOrder(), menu)
-count_df = count_df[count_df['total_ordered'] > 0]
-print(count_df)

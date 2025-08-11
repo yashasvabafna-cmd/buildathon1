@@ -11,12 +11,8 @@ filterwarnings("ignore")
 
 
 # make test menu
-menu = pd.DataFrame({'itemid': [1, 2, 3, 4, 5, 6, 7, 8], 
-                     'name': ['burger', 'fries', 'soda', 'salad', 
-                             'pizza', 'pasta', 'ice cream', 'coffee'],
-                     'price': [5.99, 2.49, 1.99, 3.99, 7.99, 6.49, 4.49, 2.99],
-                     'category': ['main', 'side', 'drink', 'side', 
-                                  'main', 'main', 'dessert', 'drink']})
+# Load menu from CSV file
+menu = pd.read_csv('testmenu100.csv')
 
 llm = OllamaLLM(model="llama3")
 parser = PydanticOutputParser(pydantic_object=Order)
@@ -25,7 +21,7 @@ parser = PydanticOutputParser(pydantic_object=Order)
 # apparently using Pydantic based on the two classes above automaticaly generates the format instructions.
 prompt = PromptTemplate(
     template="""
-You are an order-taking assistant. Extract the customer's order from the input. Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names.
+You are an order-taking assistant. Extract the customer's order from the input. Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names. If any order is a custom order put that as another order with the modifier
 Only return valid output in this format: {format_instructions}
 
 Do not include any additional text or explanations.
@@ -38,7 +34,8 @@ Customer: {user_input}
 
 chain = prompt | llm | parser
 
-orderstr = "I want 1 salad, 3 peperoni pizzas, 1 diet coke, 1 coffee with extra sugar, and an ice tea."
+orderstr = "I root beer and a vanilla icecream" \
+""
 result = chain.invoke(orderstr)
 
 print('############# Raw Order ###############\n')
@@ -51,7 +48,7 @@ for item in result.items:
 # this seems like the balance between speed and accuracy in the SentenceTransformer models
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
-menuembeddings = embedder.encode(menu['name'].tolist())
+menuembeddings = embedder.encode(menu['item_name'].tolist())
 # print(f'menu embeddings shape - {menuembeddings.shape}')
 print('\n\n############# Menu Embedding Matches ###############\n')
 for item in result.items:
@@ -66,5 +63,5 @@ for item in result.items:
     if score < 0.6:
         print(f'No good match for {item.item_name}')
     else:
-        print(f'Best match for {item.item_name}: {best_match["name"]}, score - {score:.4f}')
+        print(f'Best match for {item.item_name}: {best_match["item_name"]}, score - {score:.4f}')
 
