@@ -13,6 +13,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.schema import Document
 
 from warnings import filterwarnings
+from langchain_core.exceptions import OutputParserException
 filterwarnings("ignore")
 
 
@@ -88,7 +89,7 @@ You are a router bot that classifies a user input as either "order" or "conversa
 
 Rules:
 - If the user is **trying to place an order**, return: "order".
-  This includes requests using words like: "want", "get me", "I'd like", "can I have", "I'll take", "give me", etc.
+  This includes requests using words like: "want", "get me", "I'd like", "can I have", "I'll take", "give me", etc. They may also order by responding "yes" to questions like "Would you like to order something?". Use chat history for these cases.
 - If the user is **asking a question**, making small talk, or seeking info, return: "conversation".
 - Return only one word: either "order" or "conversation". Do not explain or return anything else.
 
@@ -110,6 +111,7 @@ Output: order
 
 Now classify the following:
 
+Recent chat history: {chat_history}
 User input: {user_input}  
 Output:
 """
@@ -127,6 +129,42 @@ embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
 menuembeddings = embedder.encode(menu['item_name'].tolist())
 
+def ordertake(chain, user_input, parser):
+    order = []
+    print('ORDER DETECTED')
+    try:
+        ai_response = chain.invoke({
+            "user_input": user_input,
+            "format_instructions": parser.get_format_instructions()
+        })
+
+    except OutputParserException:
+        print("PARSING ERROR - REROUTING TO CONVERSATION")
+        return None, None
+
+
+    for item in ai_response.items:
+        print(item.item_name, item.quantity, item.modifiers)
+
+        # print(f'menu embeddings shape - {menuembeddings.shape}')
+    for item in ai_response.items:
+        item_embedding = embedder.encode(item.item_name)
+        item_embedding /= np.linalg.norm(item_embedding)
+        # print(f'item embedding shape - {item_embedding.shape}')
+        similarities = np.dot(menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True), item_embedding)
+
+        best_match_index = np.argmax(similarities)
+        best_match = menu.iloc[best_match_index]
+        score = similarities[best_match_index]
+        if score < 0.6:
+            print(f'No good match for {item.item_name}')
+        else:
+            print(f'Best match for {item.item_name}: {best_match["item_name"]}, score - {score:.4f}')
+            temp_item = Item(item_name=best_match["item_name"], quantity=item.quantity, modifiers=item.modifiers)
+            order.append(temp_item)
+
+        return order, ai_response
+
 while True:
 
     user_input = input("You: ")
@@ -138,38 +176,22 @@ while True:
     # extend chat history
     chat_history.append(HumanMessage(content=user_input))
 
-    routerResponse = routerChain.invoke({"user_input": user_input})
+    routerResponse = routerChain.invoke({"user_input": user_input, "chat_history": chat_history[-2:]})
+
+    convToken = False
 
     if routerResponse.content.strip() == "order":
-        print('ORDER DETECTED')
-        ai_response = chain.invoke({
-            "user_input": user_input,
-            "format_instructions": parser.get_format_instructions()
-        })
-        for item in ai_response.items:
-            print(item.item_name, item.quantity, item.modifiers)
-
-            # print(f'menu embeddings shape - {menuembeddings.shape}')
-        for item in ai_response.items:
-            item_embedding = embedder.encode(item.item_name)
-            item_embedding /= np.linalg.norm(item_embedding)
-            # print(f'item embedding shape - {item_embedding.shape}')
-            similarities = np.dot(menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True), item_embedding)
-
-            best_match_index = np.argmax(similarities)
-            best_match = menu.iloc[best_match_index]
-            score = similarities[best_match_index]
-            if score < 0.6:
-                print(f'No good match for {item.item_name}')
-            else:
-                print(f'Best match for {item.item_name}: {best_match["item_name"]}, score - {score:.4f}')
-                temp_item = Item(item_name=best_match["item_name"], quantity=item.quantity, modifiers=item.modifiers)
-                activeOrder.items.append(temp_item)
-
+        order, ai_response = ordertake(chain, user_input, parser)
+        if order or ai_response:
+            activeOrder.items += order
             chat_history.append(AIMessage(content=ai_response.model_dump_json()))
+        else:
+            convToken = True
 
-    elif routerResponse.content.strip() == "conversation":
+
+    elif routerResponse.content.strip() == "conversation" or convToken:
         print('CONVERSATION DETECTED')
+        print(user_input)
         rel_docs, context = get_context(user_input)
         if len(rel_docs) == 0:
             # no relevant context
