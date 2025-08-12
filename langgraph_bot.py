@@ -16,7 +16,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
 from promptstore import orderPrompt, conversationPrompt, agentPrompt
-from Classes import Item, Order
+from classes import Item, Order
 from utils import makeRetriever, get_context
 
 import warnings
@@ -30,7 +30,7 @@ class State(TypedDict):
 
 
 parser = PydanticOutputParser(pydantic_object=Order)
-menu = pd.read_csv("testmenu100.csv")
+menu = pd.read_csv("datafiles/testmenu100.csv")
 
 # Defining chains and tools
 
