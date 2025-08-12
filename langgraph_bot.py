@@ -8,7 +8,7 @@ from langgraph.graph.message import add_messages
 from operator import add
 
 from langchain.chat_models import init_chat_model
-from langchain_nvidia_ai_endpoints import ChatNVIDIA
+#from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
