@@ -11,6 +11,7 @@ from langchain.chat_models import init_chat_model
 #from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+from langgraph.checkpoint.memory import MemorySaver
 
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
@@ -79,7 +80,7 @@ def agent_node(state: State):
     messages = state["messages"]
     # print(state["messages"])
     # print(state["intermediate_steps"])
-    response = agent.invoke({"messages": messages})
+    response = agent.invoke({"messages": [messages[-1]]})
     # print(response["agent_scratchpad"])
     return {"messages": response["messages"]}
 
@@ -89,12 +90,10 @@ graph.set_entry_point("agent")
 graph.add_edge(START, "agent")
 graph.add_edge("agent", END)
 
-agent_graph = graph.compile()
+memory = MemorySaver()
+agent_graph = graph.compile(checkpointer=memory)
 
-state = {
-    "messages": [],
-    # "intermediate_steps": []
-}
+state = State(messages=[])
 
 config = {"configurable": {"thread_id": "def234"}}
 
