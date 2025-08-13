@@ -1,6 +1,6 @@
 import pandas as pd 
-from testfile_IGNORE import Item
-from testfile_IGNORE import OrderUpdate
+from oldbots.testfile_IGNORE import Item
+from oldbots.testfile_IGNORE import OrderUpdate
 order_data={
     'order_id': [1, 2, 3],
     'item_name': ['burger', 'fries', 'soda'],

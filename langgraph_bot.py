@@ -10,7 +10,7 @@ from operator import add
 from langchain.chat_models import init_chat_model
 #from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
-    intermediate_steps: Annotated[list, add]
+    # intermediate_steps: Annotated[list, add]
 
 
 parser = PydanticOutputParser(pydantic_object=Order)
@@ -77,15 +77,11 @@ agent = create_react_agent(model=llm, tools=tools, prompt=agentPrompt)
 
 def agent_node(state: State):
     messages = state["messages"]
-    print(state["messages"])
-    print(state["intermediate_steps"])
-    response = agent.invoke({"messages": messages, "intermediate_steps": state["intermediate_steps"]})
-    
-    for x in response:
-        print(f"type - {type(x)}")
-        for y in x:
-            print(y)
-        print()
+    # print(state["messages"])
+    # print(state["intermediate_steps"])
+    response = agent.invoke({"messages": messages})
+    # print(response["agent_scratchpad"])
+    return {"messages": response["messages"]}
 
 graph = StateGraph(State)
 graph.add_node("agent", agent_node)
@@ -97,7 +93,7 @@ agent_graph = graph.compile()
 
 state = {
     "messages": [],
-    "intermediate_steps": []
+    # "intermediate_steps": []
 }
 
 config = {"configurable": {"thread_id": "def234"}}
@@ -112,5 +108,8 @@ while True:
     state["messages"].append({"role": "user", "content": user_input})
 
     for update in agent_graph.stream(state, config=config):
-        #print(update)
-        print("placeholder")
+        for step, output in update.items():
+            if "messages" in output:
+                for m in output["messages"]:
+                    if isinstance(m, (AIMessage, ToolMessage)):
+                        m.pretty_print()
