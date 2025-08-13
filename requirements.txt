@@ -4,3 +4,6 @@ langsmith
 python-dotenv
 langchain-groq
 langchain_tavily
+langchain-mcp-adapters
+mcp-server.routers
+mcp
