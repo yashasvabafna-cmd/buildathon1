@@ -70,7 +70,7 @@ routerPrompt = ChatPromptTemplate(
       
                 If the input contains a restaurant order for food or beverages, indicated by phrases like "I want", "I'd like", "can I have", etc., and names of menu items, return "extract".
                 If the user is responding "yes" to questions like "Would you like to order something?", also return "extract".
-                For everything else (questions about the menu, a summary of the user's current order, etc.) return "conversation".
+                For everything else (questions about the menu, a summary of the user's current order, etc.) return "conversation". If the user is asking for suggestions or recommendations, return "conversation".
       
                 Examples:
                 Input: "I want a burger and fries"
@@ -83,6 +83,12 @@ routerPrompt = ChatPromptTemplate(
                 Output: conversation
       
                 Input: "What have I ordered so far?"
+                Output: conversation
+      
+                Input: "Suggest a meal with an appetizer and a side. I like spicy food"
+                Output: conversation
+      
+                Input: I want ice cream
                 Output: extract
                 """),
     ("human", "{user_input}")

@@ -3,6 +3,7 @@ from typing_extensions import TypedDict
 import pandas as pd
 import numpy as np
 import pprint
+import os
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -50,8 +51,11 @@ def router_node(state: State):
     """
     
     messages = state["messages"]
-    user_input = messages[-1].content
-
+    for m in messages[::-1]:
+        if isinstance(m, HumanMessage):
+            user_input = m.content
+            break
+    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     response = routerChain.invoke({"user_input": [user_input]})
     return {"messages": [AIMessage(response.content, metadata={"node":"router"})]}
 
@@ -61,7 +65,10 @@ def extract_order_node(state: State):
     """
     
     messages = state["messages"]
-    user_input = messages[-2].content
+    for m in messages[::-1]:
+        if isinstance(m, HumanMessage):
+            user_input = m.content
+            break
     
     try:
         result = orderChain.invoke({
@@ -78,7 +85,10 @@ def menu_query_node(state: State):
     """
     
     messages = state["messages"]
-    user_input = messages[-2].content
+    for m in messages[::-1]:
+        if isinstance(m, HumanMessage):
+            user_input = m.content
+            break
     
     rel_docs, context = get_context(user_input, retriever)
     ai_response = conversationChain.invoke({
@@ -143,8 +153,15 @@ def checkRejected(state:State):
 
     if not len(rej_items): return "stop"
     else:
-        print(f"Chatbot: The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}")
-        return "router"
+        # print(f"Chatbot: The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}")
+        return "display_rejected"
+    
+def display_rejected(state: State):
+    rej_items = state.get("rejected_items", [])
+
+    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", metadata={"node":"display_rejected"})
+
+    return {"messages": [m]}
 
 # graph
 builder = StateGraph(State)
@@ -152,6 +169,7 @@ builder.add_node("router", router_node)
 builder.add_node("extract_order", extract_order_node)
 builder.add_node("menu_query", menu_query_node)
 builder.add_node("process_order", processOrder)
+builder.add_node("display_rejected", display_rejected)
 builder.add_edge(START, "router")
 builder.add_conditional_edges(
     "router",
@@ -167,14 +185,21 @@ builder.add_conditional_edges(
     checkRejected, 
     {
         "stop": END,
-        "router": "router"
+        "display_rejected": "display_rejected"
     }
 )
+builder.add_edge("display_rejected", END)
 builder.add_edge("menu_query", END)
 
 memory = MemorySaver()
 
 graph = builder.compile(checkpointer=memory)
+
+# draw
+ascii_rep = graph.get_graph().draw_ascii()
+print(ascii_rep)
+graph.get_graph().draw_png("graph.png")
+os.system("open graph.png")
 
 # state = State(messages=[])
 
