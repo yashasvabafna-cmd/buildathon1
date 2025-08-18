@@ -7,6 +7,7 @@ class Item(BaseModel):
     item_name: str
     quantity: int
     modifiers: List[str] = []
+    delete: bool = False
 
 class Order(BaseModel):
     items: List[Item]
