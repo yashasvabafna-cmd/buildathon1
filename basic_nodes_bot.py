@@ -20,7 +20,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
 from promptstore import orderPrompt, conversationPrompt, agentPrompt, routerPrompt
-from classes import Item, Order
+from Classes import Item, Order
 from utils import makeRetriever, get_context
 from dataclasses import field
 
@@ -43,7 +43,6 @@ orderChain = orderPrompt | llm | parser
 conversationChain = conversationPrompt | llm
 routerChain = routerPrompt | llm
 retriever = makeRetriever(menu, search_type="similarity", k=10)
-
 
 def router_node(state: State):
     """
@@ -88,6 +87,7 @@ def menu_query_node(state: State):
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
             user_input = m.content
+            print(f"DEBUG - PROCESSING MESSAGE: ")
             break
     
     rel_docs, context = get_context(user_input, retriever)
@@ -164,79 +164,86 @@ def display_rejected(state: State):
     return {"messages": [m]}
 
 # graph
-builder = StateGraph(State)
-builder.add_node("router", router_node)
-builder.add_node("extract_order", extract_order_node)
-builder.add_node("menu_query", menu_query_node)
-builder.add_node("process_order", processOrder)
-builder.add_node("display_rejected", display_rejected)
-builder.add_edge(START, "router")
-builder.add_conditional_edges(
-    "router",
-    routeFunc, 
-    {
-        "extract": "extract_order",
-        "conversation": "menu_query"
-    }
-)
-builder.add_edge("extract_order", "process_order")
-builder.add_conditional_edges(
-    "process_order",
-    checkRejected, 
-    {
-        "stop": END,
-        "display_rejected": "display_rejected"
-    }
-)
-builder.add_edge("display_rejected", END)
-builder.add_edge("menu_query", END)
+def makegraph():
+    builder = StateGraph(State)
+    builder.add_node("router", router_node)
+    builder.add_node("extract_order", extract_order_node)
+    builder.add_node("menu_query", menu_query_node)
+    builder.add_node("process_order", processOrder)
+    builder.add_node("display_rejected", display_rejected)
+    builder.add_edge(START, "router")
+    builder.add_conditional_edges(
+        "router",
+        routeFunc, 
+        {
+            "extract": "extract_order",
+            "conversation": "menu_query"
+        }
+    )
+    builder.add_edge("extract_order", "process_order")
+    builder.add_conditional_edges(
+        "process_order",
+        checkRejected, 
+        {
+            "stop": END,
+            "display_rejected": "display_rejected"
+        }
+    )
+    builder.add_edge("display_rejected", END)
+    builder.add_edge("menu_query", END)
 
-memory = MemorySaver()
+    memory = MemorySaver()
 
-graph = builder.compile(checkpointer=memory)
+    graph = builder.compile(checkpointer=memory)
+    return graph
 
 # draw
-ascii_rep = graph.get_graph().draw_ascii()
-print(ascii_rep)
-graph.get_graph().draw_png("graph.png")
-os.system("open graph.png")
+# ascii_rep = graph.get_graph().draw_ascii()
+# print(ascii_rep)
+# graph.get_graph().draw_png("graph.png")
+# os.system("open graph.png")
 
 # state = State(messages=[])
 
-thread_id = "abc123"
-config = {"configurable": {"thread_id": thread_id}}
 
-graph.update_state(config, {
+
+if __name__ == "__main__":
+    graph = makegraph()
+    
+    thread_id = "abc123"
+    config = {"configurable": {"thread_id": thread_id}}
+
+    graph.update_state(config, {
         "cart": [],
         "rejected_items": []
     })
 
-while True:
-    user_input = input("You: ")
+    while True:
+        user_input = input("You: ")
 
-    if user_input.lower() in {"quit", "exit"}:
-        print("Chatbot: Goodbye!")
-        break
-    
-    # state["messages"].append({"role": "human", "content": user_input})
+        if user_input.lower() in {"quit", "exit"}:
+            print("Chatbot: Goodbye!")
+            break
+        
+        # state["messages"].append({"role": "human", "content": user_input})
 
-    for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
-        for step, output in update.items():
-            if "messages" in output:
-                for m in output["messages"]:
-                    if isinstance(m, (AIMessage, ToolMessage)):
-                        print(f"Chatbot: {m.content}")
-    
-    # print(f"Your cart so far - {graph.get_state(config=config).values}")
+        for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
+            for step, output in update.items():
+                if "messages" in output:
+                    for m in output["messages"]:
+                        if isinstance(m, (AIMessage, ToolMessage)):
+                            print(f"Chatbot: {m.content}")
+        
+        # print(f"Your cart so far - {graph.get_state(config=config).values}")
 
-    # cp = memory.get(config)       # MemorySaver.get(thread_id)
-    # if cp is None:
-    #     print("DEBUG: checkpointer returned None (no checkpoint).")
-    # else:
-    #     # cp is a dict like {"state": {...}, "metadata": {...}}
-    #     saved_state = cp.get("state", {})
-    #     saved_msgs = saved_state.get("messages", [])
-    #     print(f"DEBUG: checkpoint saved {len(saved_msgs)} messages.")
-    #     # show last few messages and their types
-    #     for i, m in enumerate(saved_msgs[-6:], start=max(0, len(saved_msgs)-6)):
-    #         print(f"  [{i}] type={type(m)} repr={getattr(m,'content',repr(m))[:120]}")
+        # cp = memory.get(config)       # MemorySaver.get(thread_id)
+        # if cp is None:
+        #     print("DEBUG: checkpointer returned None (no checkpoint).")
+        # else:
+        #     # cp is a dict like {"state": {...}, "metadata": {...}}
+        #     saved_state = cp.get("state", {})
+        #     saved_msgs = saved_state.get("messages", [])
+        #     print(f"DEBUG: checkpoint saved {len(saved_msgs)} messages.")
+        #     # show last few messages and their types
+        #     for i, m in enumerate(saved_msgs[-6:], start=max(0, len(saved_msgs)-6)):
+        #         print(f"  [{i}] type={type(m)} repr={getattr(m,'content',repr(m))[:120]}")
