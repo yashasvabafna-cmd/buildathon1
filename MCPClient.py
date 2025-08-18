@@ -58,7 +58,7 @@ class RestaurantClient:
             self.client = MultiServerMCPClient({
                 "toolkit": {
                     "command": "python",
-                    "args": ["MCPToolkit.py"],
+                    "args": ["MCP_BOT.py"],
                     "transport": "stdio"
                 }
             })

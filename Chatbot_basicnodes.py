@@ -3,12 +3,12 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from basic_nodes_bot import makegraph
 import json
 
-# ---- Streamlit Page Config ----
+# Streamlit Page Config 
 st.set_page_config(page_title="Menu Order Chatbot", page_icon="🍽️", layout="centered")
 st.title("🍽️ Restaurant Order Assistant")
 st.caption("Ask questions about the menu or place an order.")
 
-# ---- Initialize Session State ----
+# Initialize Session State 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "cart" not in st.session_state:
@@ -24,7 +24,7 @@ graph.update_state(config, {
     "rejected_items": st.session_state.rejected_items
 })
 
-# ------ Show Chat History ------
+# Show Chat History
 for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
         with st.chat_message("user"):
@@ -33,7 +33,7 @@ for msg in st.session_state.messages:
         with st.chat_message("assistant"):
             st.markdown(msg.content)
 
-# ---- Chat Input -----
+#Chat Input
 if user_input := st.chat_input("What would you like to order or ask?"):
     user_msg = HumanMessage(user_input)
     st.session_state.messages.append(user_msg)
@@ -68,9 +68,7 @@ if user_input := st.chat_input("What would you like to order or ask?"):
                     if isinstance(m, AIMessage):
                         with st.chat_message("assistant"):
                             st.markdown(m.content)
-    # END FOR
-
-# ---- Sidebar ----
+  
 with st.sidebar:
     st.subheader("🛒 Your Cart")
     if st.session_state.cart:

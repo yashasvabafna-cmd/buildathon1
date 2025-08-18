@@ -90,7 +90,7 @@ async def process_message(user_input: str):
     """Process user message and get response"""
     try:
         if not st.session_state.client:
-            return "❌ Client not initialized. Please refresh the page."
+            return " Client not initialized. Please refresh the page."
         
         response = await st.session_state.client.process_user_input(user_input)
         
@@ -100,7 +100,7 @@ async def process_message(user_input: str):
         
         return response
     except Exception as e:
-        return f"❌ Error processing message: {str(e)}"
+        return f" Error processing message: {str(e)}"
 
 def display_chat_messages():
     """Display chat messages"""
@@ -125,9 +125,7 @@ def display_order_summary():
                     
                     # Get price from client if available
                     if st.session_state.client:
-                        item_price = st.session_state.client.get_item_price_from_menu(name)
-                    else:
-                        item_price = 10.00  # Default price
+                        item_price = st.session_state.client.get_item_price_from_menu(name)  
                     
                     total_item_price = item_price * qty
                     total_price += total_item_price
@@ -152,7 +150,7 @@ def display_order_summary():
                 """, unsafe_allow_html=True)
             
             st.sidebar.markdown(f"""
-            <div style="background-color: #28a745; color: white; padding: 1rem; border-radius: 8px; text-align: center; margin-top: 1rem;">
+            <div style="background-color: #28a745; color: yellow; padding: 1rem; border-radius: 8px; text-align: center; margin-top: 1rem;">
                 <strong>Total: ${total_price:.2f}</strong>
             </div>
             """, unsafe_allow_html=True)
@@ -179,7 +177,7 @@ def main():
         with st.spinner("🔧 Initializing restaurant assistant..."):
             success = asyncio.run(initialize_client())
             if not success:
-                st.error("❌ Failed to initialize the restaurant assistant. Please check your setup and refresh the page.")
+                st.error(" Failed to initialize the restaurant assistant. Please check your setup and refresh the page.")
                 st.stop()
         st.success("✅ Restaurant assistant initialized successfully!")
         st.rerun()

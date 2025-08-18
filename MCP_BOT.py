@@ -7,7 +7,6 @@ from typing_extensions import TypedDict,List
 from langgraph.graph import StateGraph,START,END
 from langgraph.graph.message import add_messages
 import pandas as pd
-import pprint
 from langchain.chat_models import init_chat_model
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage
@@ -41,7 +40,7 @@ menu = pd.read_csv("datafiles/testmenu100.csv")
 llm = ChatGroq(model="llama-3.1-8b-instant")
 orderChain = orderPrompt | llm | parser
 conversationChain = conversationPrompt | llm
-retriever = makeRetriever(menu, search_type="similarity", k=10)
+retriever = makeRetriever(menu, search_type="similarity",k=len(menu))
 
 # ✅ NEW: Menu item finder with fuzzy matching
 class MenuValidator:
