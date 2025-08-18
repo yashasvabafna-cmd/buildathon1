@@ -15,7 +15,6 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 from sentence_transformers import SentenceTransformer
 
-
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
@@ -24,11 +23,14 @@ from classes import Item, Order
 from utils import makeRetriever, get_context
 from dataclasses import field
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import warnings
 warnings.filterwarnings("ignore")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
+    internals: Annotated[list, add]     # using this for internal info passing
     most_recent_order: object
     cart: list
     rejected_items: list[tuple]
@@ -57,12 +59,16 @@ def router_node(state: State):
             break
     # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     response = routerChain.invoke({"user_input": [user_input]})
-    return {"messages": [AIMessage(response.content, metadata={"node":"router"})]}
+    # print(f"raw router response - {response}")
+    # print(f".content - {response.content}")
+    return {"internals": [response.content]}
 
 def extract_order_node(state: State):
     """
     Extract structured order JSON from user input.
     """
+
+    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     
     messages = state["messages"]
     for m in messages[::-1]:
@@ -75,7 +81,7 @@ def extract_order_node(state: State):
             "user_input": user_input,
             "format_instructions": parser.get_format_instructions()
         })
-        return {"messages": [AIMessage(content=result.model_dump_json())], "most_recent_order": result}
+        return {"internals": [AIMessage(content=result.model_dump_json(), name="extract")], "most_recent_order": result}
     except Exception as e:
         return {"messages": [AIMessage(content=f"Error parsing order: {str(e)}")]}
     
@@ -89,6 +95,8 @@ def menu_query_node(state: State):
         if isinstance(m, HumanMessage):
             user_input = m.content
             break
+
+    print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     
     rel_docs, context = get_context(user_input, retriever)
     ai_response = conversationChain.invoke({
@@ -100,21 +108,20 @@ def menu_query_node(state: State):
     return {"messages": [AIMessage(content=ai_response.content)]}
 
 def routeFunc(state: State):
-    messages = state["messages"]
-    last_m = messages[-1]
+    internals = state["internals"]
+    last_m = internals[-1]
 
-    if last_m.metadata.get("node") != "router":
-        print("error.")
-        return None
+    # print(internals)
+
+    if last_m.strip().lower() in ["extract", "conversation"]:
+        return last_m.strip().lower()
     else:
-        if last_m.content.strip().lower() in ["extract", "conversation"]:
-            return last_m.content.strip().lower()
-        else:
-            print(f"unrecognized router output - {last_m.content.strip()}")
-            return None
+        print(f"unrecognized router output - {last_m}")
+        return None
 
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
+# save static version
 menuembeddings = embedder.encode(menu['item_name'].tolist())
 menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
 
@@ -124,6 +131,22 @@ def processOrder(state: State):
     cart = state["cart"]
     rej_items = []
     for item in mro.items:
+        # removal/deletion case first
+        
+        if item.delete:
+            # check if this exact item (or item without modifiers if no exact match) is actually in the cart.
+            for i, added_item in enumerate(cart):
+                if item.item_name.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
+                    cart[i].quantity -= item.quantity
+                    break
+                elif item.item_name.lower().strip() == added_item.item_name.lower().strip():
+                    # partial match. possible future change - list all partial matches and ask what to delete. could create new node "clarify_deletion"
+                    cart[i].quantity -= item.quantity
+                    break
+            
+            continue
+
+
         item_embedding = embedder.encode(item.item_name)
         item_embedding /= np.linalg.norm(item_embedding)
 
@@ -142,6 +165,8 @@ def processOrder(state: State):
             # print(f'Best match for {item.item_name}: {best_match["item_name"]}, score - {score:.4f}')
             cart.append(Item(item_name=best_match["item_name"], quantity=item.quantity, modifiers=item.modifiers))
 
+    cart = [c for c in cart if c.quantity > 0]
+
     print(f"Your cart is now {cart}")
     return {
         "cart": cart,
@@ -159,7 +184,7 @@ def checkRejected(state:State):
 def display_rejected(state: State):
     rej_items = state.get("rejected_items", [])
 
-    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", metadata={"node":"display_rejected"})
+    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", name="display_rejected")
 
     return {"messages": [m]}
 
@@ -224,19 +249,5 @@ while True:
         for step, output in update.items():
             if "messages" in output:
                 for m in output["messages"]:
-                    if isinstance(m, (AIMessage, ToolMessage)):
+                    if isinstance(m, (AIMessage, ToolMessage)) and m.name not in ["router", "extract"]:
                         print(f"Chatbot: {m.content}")
-    
-    # print(f"Your cart so far - {graph.get_state(config=config).values}")
-
-    # cp = memory.get(config)       # MemorySaver.get(thread_id)
-    # if cp is None:
-    #     print("DEBUG: checkpointer returned None (no checkpoint).")
-    # else:
-    #     # cp is a dict like {"state": {...}, "metadata": {...}}
-    #     saved_state = cp.get("state", {})
-    #     saved_msgs = saved_state.get("messages", [])
-    #     print(f"DEBUG: checkpoint saved {len(saved_msgs)} messages.")
-    #     # show last few messages and their types
-    #     for i, m in enumerate(saved_msgs[-6:], start=max(0, len(saved_msgs)-6)):
-    #         print(f"  [{i}] type={type(m)} repr={getattr(m,'content',repr(m))[:120]}")

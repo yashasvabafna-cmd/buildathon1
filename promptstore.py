@@ -6,6 +6,7 @@ orderPrompt = ChatPromptTemplate.from_messages([
                 2. Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names.
                 3. Only return valid JSON output in this format: {format_instructions}
                 4. NEVER include any additional text or explanations, preceding or following the JSON.
+                5. ONLY set the delete field in an Item to True if the user clearly indicates they want to "remove" or "delete" or "cancel" an item.
                 """),
     ("human", "{user_input}")
 ])
@@ -70,6 +71,7 @@ routerPrompt = ChatPromptTemplate(
       
                 If the input contains a restaurant order for food or beverages, indicated by phrases like "I want", "I'd like", "can I have", etc., and names of menu items, return "extract".
                 If the user is responding "yes" to questions like "Would you like to order something?", also return "extract".
+                If the user intends to, in any way, modify their current order or cart, return "extract". This could be a request to modify certain items already ordered or to delete items entirely. Pay attention to keywords like "delete", "remove", and "cancel".
                 For everything else (questions about the menu, a summary of the user's current order, etc.) return "conversation". If the user is asking for suggestions or recommendations, return "conversation".
       
                 Examples:
@@ -89,6 +91,9 @@ routerPrompt = ChatPromptTemplate(
                 Output: conversation
       
                 Input: I want ice cream
+                Output: extract
+      
+                Input: Cancel that pizza
                 Output: extract
                 """),
     ("human", "{user_input}")
