@@ -2,10 +2,12 @@ from typing import Annotated
 from typing_extensions import TypedDict
 import pandas as pd
 import numpy as np
-import pprint
 import os
 import csv
 from datetime import datetime
+import subprocess
+import logging
+from dotenv import load_dotenv
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -17,22 +19,23 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 
 from sentence_transformers import SentenceTransformer
-from difflib import SequenceMatcher
 from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
-
-from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
-
-from promptstore import orderPrompt, conversationPrompt, agentPrompt, routerPrompt
+from promptstore import orderPrompt, conversationPrompt, routerPrompt
 from classes import Item, Order
-from utils import makeRetriever, get_context, threshold_search
-from dataclasses import field
+from utils import makeRetriever, get_context
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+trace = True
+load_dotenv("keys.env")
+if trace:
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+    os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
+    os.environ["LANGCHAIN_PROJECT"] = "default"
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -138,8 +141,6 @@ def routeFunc(state: State):
     else:
         print(f"unrecognized router output - {last_m}")
         return None
-
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
 # save static version
 # menuembeddings = embedder.encode(menu['item_name'].tolist())
@@ -270,7 +271,7 @@ def confirm_order(state: State):
             items.append(item_desc)
         summary = "Your order:\n" + "\n".join(items)
     msg = AIMessage(
-        content=f"{summary}\n\nWould you like to confirm and place this order? (Type 'yes' to confirm)",
+        content=f"{summary}\n\nWould you like anything else? To confirm and place your order, enter 'yes'.",
         name="confirm_order"
     )
     return {"messages": [msg]}
@@ -315,7 +316,6 @@ def makegraph():
     builder.add_node("process_order", processOrder)
     builder.add_node("delete_order", deleteOrder)
     builder.add_node("confirm_order", confirm_order)
-    builder.add_node("summary_node", summary_node)
     builder.add_node("display_rejected", display_rejected)
     builder.add_edge(START, "router")
     builder.add_conditional_edges(
@@ -333,11 +333,10 @@ def makegraph():
         "process_order",
         checkRejected, 
         {
-            "summary_node": "summary_node",
+            "summary_node": "confirm_order",
             "display_rejected": "display_rejected"
         }
     )
-    builder.add_edge("summary_node", END)
     builder.add_edge("confirm_order", END)
     builder.add_edge("display_rejected", END)
     builder.add_edge("menu_query", END)
@@ -347,16 +346,10 @@ def makegraph():
     graph = builder.compile(checkpointer=memory)
     return graph
 
-# draw
-
-
-# state = State(messages=[])
-
-
 
 if __name__ == "__main__":
     graph = makegraph()
-    draw = False
+    draw = True
 
     if draw:
         ascii_rep = graph.get_graph().draw_ascii()
@@ -385,7 +378,7 @@ if __name__ == "__main__":
                 print("Chatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
                 break
             else:
-                print("Chatbot: Your cart is empty, nothing to save.")
+                print("Chatbot: Your cart was empty, no order has been placed. Goodbye.")
                 break
 
             

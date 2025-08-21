@@ -51,7 +51,11 @@ class MultiSearch:
                 'match_type': "bm"
             }
         else:
-            return {"found": False}
+            return {"found": False,
+                    "items": [],
+                    "scores": [],
+                    "match_type": "bm"
+            }
         
     def sequenceMatch(self, item_name, seq_threshold):
         item_lower = item_name.lower().strip()
@@ -74,7 +78,11 @@ class MultiSearch:
                 'match_type': "seq"
             }
         else:
-            return {"found": False}
+            return {"found": False,
+                    "items": [],
+                    "scores": [],
+                    "match_type": "seq"
+            }
         
     
     def embeddingSearch(self, item_name, vectordb, emb_thresh):
@@ -88,7 +96,11 @@ class MultiSearch:
                 'match_type': "emb"
             }
         else:
-            return {"found": False}
+            return {"found": False,
+                    "items": [],
+                    "scores": [],
+                    "match_type": "emb"
+            }
 
     def unify(self, query, bm_searcher, vectordb, emb_thresh, seq_thresh):
         exact = self.find_exact_match(query)
