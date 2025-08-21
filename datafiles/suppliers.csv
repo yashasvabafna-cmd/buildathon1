@@ -1,4 +1,4 @@
 supplier_id,supplier_city,supplier_name
-401,New York,Fresh Foods Inc.
-402,Los Angeles,Organic Greens Co.
-403,Chicago,Meat Masters Ltd.
+Supplier001,New York,Fresh Foods Inc.
+Supplier002,Los Angeles,Organic Greens Co.
+Supplier003,Chicago,Meat Masters Ltd.

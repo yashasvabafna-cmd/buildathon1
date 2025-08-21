@@ -2,14 +2,16 @@ import sqlite3
 import pandas as pd
 import json
 import numpy as np
-import os
-from datetime import datetime
+import os # Import os module to check for file existence
+from datetime import datetime # Import datetime for timestamp
 
-
-def create_restaurant_tables(db_name='restaurant_.db'):
+def create_restaurant_tables(db_name='restaurant.db'):
     """
     Connects to an SQLite database and creates all necessary tables for
     a restaurant inventory and recipe management system.
+
+    Args:
+        db_name (str): The name of the SQLite database file.
     """
     conn = None
     try:
@@ -56,11 +58,12 @@ def create_restaurant_tables(db_name='restaurant_.db'):
         print("Table 'Ingredients' created or already exists.")
 
         # Create Recipes table
+        # This table stores the recipe details including a JSON string for ingredients
         c.execute('''
             CREATE TABLE IF NOT EXISTS Recipes (
                 meal_id INTEGER PRIMARY KEY,
                 meal_name TEXT NOT NULL,
-                ingredients TEXT,
+                ingredients TEXT, -- Stored as a JSON string
                 recipe TEXT,
                 FOREIGN KEY (meal_id) REFERENCES Meals(meal_id)
             );
@@ -74,7 +77,6 @@ def create_restaurant_tables(db_name='restaurant_.db'):
                 Meal_ID INTEGER NOT NULL,
                 Ingredient_ID INTEGER NOT NULL,
                 Quantity REAL,
-                Recipe_Unit TEXT, -- This column is crucial for unit handling
                 FOREIGN KEY (Meal_ID) REFERENCES Meals(meal_id),
                 FOREIGN KEY (Ingredient_ID) REFERENCES Ingredients(ingredient_id)
             );
@@ -124,7 +126,7 @@ def create_restaurant_tables(db_name='restaurant_.db'):
         ''')
         print("Table 'Waste' created or already exists.")
 
-        # Create Orders table
+        # Create Orders table (New table for this request)
         c.execute('''
             CREATE TABLE IF NOT EXISTS Orders (
                 Order_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,38 +138,33 @@ def create_restaurant_tables(db_name='restaurant_.db'):
         ''')
         print("Table 'Orders' created or already exists.")
 
+
         conn.commit()
         print("\nAll tables created successfully!")
-        
+
+        # Verify table creation
+        c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = c.fetchall()
+        print("\nTables in the database:")
+        for table in tables:
+            print(table[0])
+
     except sqlite3.Error as e:
         print(f"An error occurred during table creation: {e}")
     finally:
         if conn:
             conn.close()
 
-def add_recipe_unit_column(conn):
-    """Adds the Recipe_Unit column to the Recipe_Ingredients table if it doesn't exist."""
-    c = conn.cursor()
-    try:
-        c.execute("PRAGMA table_info(Recipe_Ingredients);")
-        columns = [col[1] for col in c.fetchall()]
-        if 'Recipe_Unit' not in columns:
-            c.execute("ALTER TABLE Recipe_Ingredients ADD COLUMN Recipe_Unit TEXT;")
-            conn.commit()
-            print("Column 'Recipe_Unit' added to 'Recipe_Ingredients'.")
-        else:
-            print("Column 'Recipe_Unit' already exists in 'Recipe_Ingredients'.")
-    except sqlite3.Error as e:
-        print(f"Error adding column: {e}")
-
-def insert_data_into_tables(conn):
+def insert_data_into_tables(db_name='restaurant.db'):
     """
     Inserts data into the created tables from CSV and JSON files.
     """
-    c = conn.cursor()
-
+    conn = None
     try:
-        # --- Insert into Suppliers table ---
+        conn = sqlite3.connect(db_name)
+        c = conn.cursor()
+
+        # --- Insert into Suppliers table (Hardcoded as per previous outputs) ---
         suppliers_data = [
             ('Supplier001', 'City Fresh Produce', '123-456-7890', 2, 'Net 30'),
             ('Supplier002', 'Prime Meats Co.', '987-654-3210', 3, 'Net 15'),
@@ -180,8 +177,6 @@ def insert_data_into_tables(conn):
         meals_df = None
         if os.path.exists('meals.csv'):
             meals_df = pd.read_csv('meals.csv')
-            # CORRECTED: Rename 'item_name' column to 'name' to match the database schema
-            meals_df.rename(columns={'item_name': 'name'}, inplace=True)
             meals_data = meals_df[['meal_id', 'name', 'type', 'category', 'price', 'Chef_chef_id']].values.tolist()
             c.executemany("INSERT OR IGNORE INTO Meals (meal_id, name, type, category, price, Chef_chef_id) VALUES (?, ?, ?, ?, ?, ?)", meals_data)
             print("Inserted/Ignored data into Meals table.")
@@ -194,59 +189,66 @@ def insert_data_into_tables(conn):
         if os.path.exists('ingredients_listcsv.csv'):
             ingredients_df = pd.read_csv('ingredients_listcsv.csv')
             ingredients_data = ingredients_df[['ingredient_name', 'unit', 'current_inventory', 'reorder_level', 'supplier_id']].values.tolist()
+            # SQLite auto-increments ingredient_id, so we don't include it in the insert statement
             c.executemany("INSERT OR IGNORE INTO Ingredients (ingredient_name, unit, current_inventory, reorder_level, supplier_id) VALUES (?, ?, ?, ?, ?)", ingredients_data)
             print("Inserted/Ignored data into Ingredients table.")
 
             # Re-fetch ingredient_name to ID mapping for Recipe_Ingredients table
             ingredient_name_to_id = dict(c.execute("SELECT ingredient_name, ingredient_id FROM Ingredients").fetchall())
-            ingredient_name_to_id = {k.lower(): v for k, v in ingredient_name_to_id.items()}
+            ingredient_name_to_id = {k.lower(): v for k, v in ingredient_name_to_id.items()} # Ensure lower case for matching
+
+            
+           
 
         else:
             print("Warning: ingredients_listcsv.csv not found. Skipping Ingredients data insertion and related recipe linking.")
 
-        # --- Insert into Recipes and Recipe_Ingredients tables from recipes_batch_2.json ---
+
+        # --- Insert into Recipes table from recipes_batch_2.json ---
         if os.path.exists('recipes_batch_2.json'):
             with open('recipes_batch_2.json', 'r') as f:
                 recipes_batch_2 = json.load(f)
 
             recipes_to_insert = []
-            new_recipe_ingredient_inserts = []
-            
-            # Find the maximum existing Recipe_Ingredient_ID to avoid conflicts
-            c.execute("SELECT MAX(Recipe_Ingredient_ID) FROM Recipe_Ingredients;")
-            max_id = c.fetchone()[0]
-            current_recipe_ingredient_id = (max_id if max_id is not None else 0) + 1
-            
-            # Realistic quantities dictionary for a more realistic approach
-            realistic_quantities = {
-                'salt': (0.01, 'kg'), 'cooking oil': (0.05, 'litres'), 'onion': (0.1, 'kg'), 'tomatoes': (0.15, 'kg'),
-                'ginger-garlic paste': (0.02, 'kg'), 'turmeric': (0.005, 'kg'), 'garam masala': (0.005, 'kg'),
-                'rice': (0.2, 'kg'), 'paneer': (0.1, 'kg'), 'chicken': (0.2, 'kg'), 'mutton': (0.2, 'kg'),
-                'whole wheat flour': (0.1, 'kg'), 'eggplant': (0.2, 'kg'), 'maida': (0.1, 'kg'),
-                'potato': (0.15, 'kg'), 'mixed vegetables': (0.2, 'kg'), 'sugar': (0.05, 'kg'),
-                'milk': (0.25, 'litres'), 'fish': (0.2, 'kg'), 'prawn': (0.2, 'kg'), 'thick yogurt': (0.1, 'kg'),
-                'lemon juice': (0.05, 'litres'), 'bell pepper': (0.1, 'kg'), 'ghee': (0.05, 'kg'),
-                'peas': (0.1, 'kg'), 'green chilies': (0.01, 'kg'), 'cauliflower': (0.2, 'kg'),
-                'cornflour': (0.05, 'kg'), 'soy sauce': (0.05, 'litres'), 'chili sauce': (0.05, 'litres'),
-                'spring onion': (0.02, 'kg'), 'ginger': (0.01, 'kg'), 'garlic': (0.01, 'kg'),
-                'curd': (0.1, 'kg'), 'chickpea flour': (0.1, 'kg'), 'whole wheat flour': (0.1, 'kg'),
-                'coriander leaves': (0.005, 'kg'), 'jaggery': (0.1, 'kg'), 'semolina': (0.1, 'kg'),
-                'black pepper': (0.005, 'kg'), 'cumin seeds': (0.005, 'kg'), 'mustard seeds': (0.005, 'kg'),
-                'mint leaves': (0.005, 'kg'), 'fresh cream': (0.1, 'litres'), 'cashew nuts': (0.05, 'kg'),
-                'butter': (0.05, 'kg'), 'basmati rice': (0.2, 'kg')
-            }
-
             for recipe_data in recipes_batch_2:
                 meal_id = recipe_data['meal_id']
                 meal_name = recipe_data['meal_name']
+                # Escape single quotes in ingredients and recipe strings for SQL
                 ingredients_str = json.dumps(recipe_data['ingredients']).replace("'", "''")
                 recipe_str = recipe_data['recipe'].replace("'", "''")
                 recipes_to_insert.append((meal_id, meal_name, ingredients_str, recipe_str))
 
+            c.executemany("INSERT OR IGNORE INTO Recipes (meal_id, meal_name, ingredients, recipe) VALUES (?, ?, ?, ?)", recipes_to_insert)
+            print("Inserted/Ignored data into Recipes table.")
+
+            # --- Insert into Recipe_Ingredients table based on recipes_batch_2.json ---
+            new_recipe_ingredient_inserts = []
+            # Find the maximum existing Recipe_Ingredient_ID to avoid conflicts
+            c.execute("SELECT MAX(Recipe_Ingredient_ID) FROM Recipe_Ingredients;")
+            max_id = c.fetchone()[0]
+            current_recipe_ingredient_id = (max_id if max_id is not None else 0) + 1
+            conn = sqlite3.connect('restaurant.db')
+            c = conn.cursor()
+
+            try:
+                # Add the new column to the table
+                c.execute("ALTER TABLE Recipe_Ingredients ADD COLUMN Recipe_Unit TEXT;")
+                conn.commit()
+                print("Column 'Recipe_Unit' added successfully to 'Recipe_Ingredients'.")
+
+                
+            except sqlite3.Error as e:
+                print(f"An error occurred: {e}")
+
+            finally:
+                if conn:
+                    conn.close()
+            for recipe_data in recipes_batch_2:
+                meal_id_from_json = recipe_data['meal_id']
                 ingredients_from_json = recipe_data['ingredients']
+
                 for ingredient_name_raw in ingredients_from_json:
                     ingredient_name_clean = ingredient_name_raw.split(',')[0].split('(')[0].strip().lower()
-
                     # Handle specific cleaning cases and lenient matching
                     if 'for litti:' in ingredient_name_clean:
                         ingredient_name_clean = 'whole wheat flour'
@@ -256,9 +258,10 @@ def insert_data_into_tables(conn):
                         ingredient_name_clean = 'garam masala'
                     elif 'oil for cooking' in ingredient_name_clean:
                         ingredient_name_clean = 'cooking oil'
-                    
+
                     ingredient_id = ingredient_name_to_id.get(ingredient_name_clean)
-                    # More lenient matching for common variations if direct match fails
+
+                    # More lenient matching for common variations
                     if ingredient_id is None:
                         if 'paneer' in ingredient_name_clean:
                             ingredient_id = ingredient_name_to_id.get('paneer')
@@ -385,21 +388,103 @@ def insert_data_into_tables(conn):
                         elif 'semolina' in ingredient_name_clean:
                             ingredient_id = ingredient_name_to_id.get('semolina')
 
+                    if ingredient_id is None:
+                        # print(f"Warning: Ingredient '{ingredient_name_raw}' (cleaned: '{ingredient_name_clean}') for Meal ID {meal_id_from_json} not found in ingredients. Skipping.")
+                        continue # Skip if no matching ingredient is found
 
-                    if ingredient_id is not None:
-                        # Use a realistic quantity from the dictionary, or a default value
-                        quantity, unit = realistic_quantities.get(ingredient_name_clean, (0.01, 'units')) # Default to 0.01 units if not found
-                        new_recipe_ingredient_inserts.append((current_recipe_ingredient_id, meal_id, ingredient_id, quantity, unit))
-                        current_recipe_ingredient_id += 1
+                    quantity = round(np.random.uniform(0.01, 0.5), 3)
+                    new_recipe_ingredient_inserts.append((current_recipe_ingredient_id, meal_id_from_json, ingredient_id, quantity))
+                    current_recipe_ingredient_id += 1
 
-            c.executemany("INSERT OR IGNORE INTO Recipes (meal_id, meal_name, ingredients, recipe) VALUES (?, ?, ?, ?)", recipes_to_insert)
-            print("Inserted/Ignored data into Recipes table.")
+            # Ensure all 100 meals have at least one recipe entry in Recipe_Ingredients
+            existing_meal_ids_in_recipes_ingredients = {item[1] for item in new_recipe_ingredient_inserts}
+
+            # If meals_df was loaded, iterate through its meal_ids
+            if meals_df is not None:
+                common_ingredient_ids = [
+                    ingredient_name_to_id.get('salt'),
+                    ingredient_name_to_id.get('cooking oil'),
+                    ingredient_name_to_id.get('onion'),
+                    ingredient_name_to_id.get('tomatoes'),
+                    ingredient_name_to_id.get('ginger-garlic paste'),
+                    ingredient_name_to_id.get('turmeric'),
+                    ingredient_name_to_id.get('garam masala'),
+                    ingredient_name_to_id.get('rice'),
+                    ingredient_name_to_id.get('paneer'),
+                    ingredient_name_to_id.get('chicken'),
+                    ingredient_name_to_id.get('mutton')
+                ]
+                common_ingredient_ids = [id for id in common_ingredient_ids if id is not None]
+
+                for meal_id in meals_df['meal_id'].unique():
+                    if meal_id not in existing_meal_ids_in_recipes_ingredients:
+                        if common_ingredient_ids:
+                            num_ingredients_to_add = min(len(common_ingredient_ids), np.random.randint(2, 4))
+                            selected_placeholder_ingredients = np.random.choice(common_ingredient_ids, num_ingredients_to_add, replace=False)
+                            for ingredient_id in selected_placeholder_ingredients:
+                                quantity = round(np.random.uniform(0.01, 0.2), 3)
+                                new_recipe_ingredient_inserts.append((current_recipe_ingredient_id, meal_id, ingredient_id, quantity))
+                                current_recipe_ingredient_id += 1
+                        else:
+                            print(f"Warning: Meal ID {meal_id} not in recipes_batch_2.json and no suitable common ingredients found for placeholder. Skipping recipe creation for this meal.")
+            # A dictionary to map cleaned ingredient names to realistic quantities and units
+            realistic_quantities = {
+                'salt': (0.01, 'kg'),
+                'cooking oil': (0.05, 'litres'),
+                'onion': (0.1, 'kg'),
+                'tomatoes': (0.15, 'kg'),
+                'ginger-garlic paste': (0.02, 'kg'),
+                'turmeric': (0.005, 'kg'),
+                'garam masala': (0.005, 'kg'),
+                'rice': (0.2, 'kg'),
+                'paneer': (0.1, 'kg'),
+                'chicken': (0.2, 'kg'),
+                'mutton': (0.2, 'kg'),
+                'whole wheat flour': (0.1, 'kg'),
+                'eggplant': (0.2, 'kg'),
+                'maida': (0.1, 'kg'),
+                'potato': (0.15, 'kg'),
+                'mixed vegetables': (0.2, 'kg'),
+                'sugar': (0.05, 'kg'),
+                'milk': (0.25, 'litres'),
+                'fish': (0.2, 'kg'),
+                'prawn': (0.2, 'kg'),
+                'thick yogurt': (0.1, 'kg'),
+                'lemon juice': (0.05, 'litres'),
+                'bell pepper': (0.1, 'kg'),
+                'ghee': (0.05, 'kg'),
+                'peas': (0.1, 'kg'),
+                'green chilies': (0.01, 'kg'),
+                'cauliflower': (0.2, 'kg'),
+                'cornflour': (0.05, 'kg'),
+                'soy sauce': (0.05, 'litres'),
+                'chili sauce': (0.05, 'litres'),
+                'spring onion': (0.02, 'kg'),
+                'ginger': (0.01, 'kg'),
+                'garlic': (0.01, 'kg'),
+                'curd': (0.1, 'kg'),
+                'chickpea flour': (0.1, 'kg'),
+                'whole wheat flour': (0.1, 'kg'),
+                'coriander leaves': (0.005, 'kg'),
+                'jaggery': (0.1, 'kg'),
+                'semolina': (0.1, 'kg'),
+                'black pepper': (0.005, 'kg'),
+                'cumin seeds': (0.005, 'kg'),
+                'mustard seeds': (0.005, 'kg'),
+                'mint leaves': (0.005, 'kg'),
+                'fresh cream': (0.1, 'litres'),
+                'cashew nuts': (0.05, 'kg'),
+                'butter': (0.05, 'kg'),
+                'basmati rice': (0.2, 'kg')
+            }
             c.executemany("INSERT OR IGNORE INTO Recipe_Ingredients (Recipe_Ingredient_ID, Meal_ID, Ingredient_ID, Quantity, Recipe_Unit) VALUES (?, ?, ?, ?, ?)", new_recipe_ingredient_inserts)
             print("Inserted/Ignored data into Recipe_Ingredients table.")
+
         else:
             print("Warning: recipes_batch_2.json not found. Skipping Recipes and Recipe_Ingredients data insertion.")
 
-        # --- Insert into Purchase_Orders table ---
+
+        # --- Insert into Purchase_Orders table (Hardcoded as per previous outputs) ---
         purchase_orders_data = [
             (1, 'Supplier003', '2025-08-05', '2025-08-09', '2025-08-08', 'Received', 6127.76),
             (2, 'Supplier001', '2025-08-10', '2025-08-12', '2025-08-13', 'Received', 7327.0),
@@ -425,7 +510,7 @@ def insert_data_into_tables(conn):
         c.executemany("INSERT OR IGNORE INTO Purchase_Orders (PO_ID, Supplier_ID, Order_Date, Expected_Delivery_Date, Actual_Delivery_Date, Status, Total_Cost) VALUES (?, ?, ?, ?, ?, ?, ?)", purchase_orders_data)
         print("Inserted/Ignored data into Purchase_Orders table.")
 
-        # --- Insert into PO_Items table ---
+        # --- Insert into PO_Items table (Hardcoded as per previous outputs) ---
         po_items_data = [
             (1, 1, 48, 9.51, 951.0), (2, 1, 33, 73.64, 3682.0), (3, 1, 40, 7.32, 732.0),
             (4, 1, 5, 35.52, 17.76), (5, 1, 46, 7.45, 745.0), (6, 2, 27, 3.7, 370.0),
@@ -443,7 +528,7 @@ def insert_data_into_tables(conn):
         c.executemany("INSERT OR IGNORE INTO PO_Items (PO_Item_ID, PO_ID, Ingredient_ID, Quantity_Ordered, Cost_at_Purchase) VALUES (?, ?, ?, ?, ?)", po_items_data)
         print("Inserted/Ignored data into PO_Items table.")
 
-        # --- Insert into Waste table ---
+        # --- Insert into Waste table (Hardcoded as per previous outputs) ---
         waste_data = [
             (1, 29, 0.49, '2025-08-19', 'Returned by Customer', 24.5), (2, 32, 0.41, '2025-08-19', 'Cooking Error', 41.0),
             (3, 31, 0.29, '2025-08-17', 'Spoiled', 29.0), (4, 35, 0.32, '2025-08-19', 'Dropped', 32.0),
@@ -474,9 +559,28 @@ def insert_data_into_tables(conn):
         c.executemany("INSERT OR IGNORE INTO Waste (Waste_ID, Ingredient_ID, Quantity, Date, Reason, Cost_of_Waste) VALUES (?, ?, ?, ?, ?, ?)", waste_data)
         print("Inserted/Ignored data into Waste table.")
 
+        # --- Insert into Orders table from orders.csv (New for this request) ---
+        if os.path.exists('orders.csv'):
+            orders_df = pd.read_csv('orders.csv')
+            # orders_df['timestamp'] might be strings, ensure correct format if needed
+            orders_data = orders_df[['timestamp', 'item_name', 'quantity', 'modifiers']].values.tolist()
+            c.executemany("INSERT INTO Orders (timestamp, item_name, quantity, modifiers) VALUES (?, ?, ?, ?)", orders_data)
+            print("Inserted data into Orders table.")
+        else:
+            print("Warning: orders.csv not found. Skipping Orders data insertion.")
+
+
+        conn.commit()
+        print("\nAll data inserted successfully!")
+
+        # --- Inventory Depletion Logic (New for this request) ---
+        deplete_inventory_from_orders(conn) # Pass the connection to the new function
 
     except sqlite3.Error as e:
         print(f"An error occurred during data insertion: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 def deplete_inventory_with_units(conn):
     """
@@ -488,44 +592,38 @@ def deplete_inventory_with_units(conn):
     
     # Define a conversion dictionary for standardizing units to a base unit (e.g., grams)
     unit_conversions = {
-        'kg': 1000.0, 'gram': 1.0, 'litres': 1000.0, 'ml': 1.0,
-        'pieces': 1.0, 'units': 1.0,
+        'kg': 1000.0,
+        'gram': 1.0,
+        'litres': 1000.0,
+        'ml': 1.0,
+        'pieces': 1.0,
+        'units': 1.0,
     }
 
     try:
         # Step 1: Read all necessary data into Pandas DataFrames for easier manipulation.
         meals_df = pd.read_sql_query("SELECT meal_id, name FROM Meals;", conn)
-        # Ensure Recipe_Unit is selected here
-        recipes_df = pd.read_sql_query("SELECT Meal_ID, Ingredient_ID, Quantity, Recipe_Unit FROM Recipe_Ingredients;", conn)
+        recipes_df = pd.read_sql_query("SELECT Meal_ID, Ingredient_ID, Quantity FROM Recipe_Ingredients;", conn)
         ingredients_df = pd.read_sql_query("SELECT ingredient_id, current_inventory, unit FROM Ingredients;", conn)
         orders_df = pd.read_sql_query("SELECT item_name, quantity FROM Orders;", conn)
 
         # Step 2: Join the tables to get a complete view of orders and their ingredients.
         # Use a case-insensitive join on meal names.
-        depletion_data = pd.merge(orders_df, meals_df, left_on=orders_df['item_name'].str.lower(), right_on=meals_df['name'].str.lower(), how='inner')
-        depletion_data = pd.merge(depletion_data, recipes_df, left_on='meal_id', right_on='Meal_ID', how='inner')
-        depletion_data = pd.merge(depletion_data, ingredients_df, left_on='Ingredient_ID', right_on='ingredient_id', how='inner')
-        
-        # Step 3: Map conversion factors for both recipe units and inventory units
-        # Handle potential NaNs from map if a unit is not in unit_conversions
-        depletion_data['recipe_conversion_factor'] = depletion_data['Recipe_Unit'].map(unit_conversions).fillna(1.0) # Default to 1.0 if unit not found
-        depletion_data['inventory_conversion_factor'] = depletion_data['unit'].map(unit_conversions).fillna(1.0) # Default to 1.0 if unit not found
+        depletion_data = pd.merge(orders_df, meals_df, left_on=orders_df['item_name'].str.lower(), right_on=meals_df['name'].str.lower())
+        depletion_data = pd.merge(depletion_data, recipes_df, left_on='meal_id', right_on='Meal_ID')
+        depletion_data = pd.merge(depletion_data, ingredients_df, left_on='Ingredient_ID', right_on='ingredient_id')
 
-        # Step 4: Calculate the total quantity needed in a standardized base unit (e.g., grams)
-        depletion_data['total_needed_base_unit'] = (
-            depletion_data['quantity'] * depletion_data['Quantity'] * depletion_data['recipe_conversion_factor']
-        )
-        
-        # Step 5: Convert the total needed from the base unit back to the inventory's specific unit
-        depletion_data['depletion_amount'] = depletion_data['total_needed_base_unit'] / depletion_data['inventory_conversion_factor']
-        
-        # Step 6: Group by ingredient and sum the total depletion for each.
-        final_depletion = depletion_data.groupby('ingredient_id')['depletion_amount'].sum().reset_index()
+        # Step 3: Calculate the total quantity needed for each ingredient, with unit conversion.
+        depletion_data['conversion_factor'] = depletion_data['unit'].map(unit_conversions)
+        depletion_data['total_needed'] = depletion_data['quantity'] * depletion_data['Quantity'] * depletion_data['conversion_factor']
 
-        # Step 7: Update the database with the new inventory levels.
+        # Step 4: Group by ingredient and sum the total needed for each.
+        final_depletion = depletion_data.groupby('ingredient_id')['total_needed'].sum().reset_index()
+
+        # Step 5: Update the database with the new inventory levels.
         updates = []
         for index, row in final_depletion.iterrows():
-            updates.append((row['depletion_amount'], row['ingredient_id']))
+            updates.append((row['total_needed'], row['ingredient_id']))
         
         c.executemany("UPDATE Ingredients SET current_inventory = current_inventory - ? WHERE ingredient_id = ?", updates)
         
@@ -535,103 +633,38 @@ def deplete_inventory_with_units(conn):
     except Exception as e:
         print(f"An unexpected error occurred during inventory depletion: {e}")
 
-def insert_orders_from_bot(conn, order_data):
-    """
-    Inserts order data directly from the bot's 'cart' list into the Orders table.
-    
-    Args:
-        conn: The database connection object.
-        order_data: The list of order items from the bot's cart.
-    """
-    c = conn.cursor()
-    try:
-        c.executemany("INSERT OR IGNORE INTO Orders (timestamp, item_name, quantity, modifiers) VALUES (?, ?, ?, ?)", order_data)
-        print("\nInserted data into Orders table from bot's cart.")
-        conn.commit()
-    except sqlite3.Error as e:
-        print(f"An error occurred while inserting orders: {e}")
-
-def show_all_tables_content(db_name='restaurant_.db'):
-    """Connects to the database and prints the content of all tables."""
-    conn = None
-    try:
-        if not os.path.exists(db_name):
-            print(f"Error: Database file '{db_name}' not found. Please ensure it has been created and populated.")
-            return
-
-        conn = sqlite3.connect(db_name)
-        c = conn.cursor()
-        
-        # Get a list of all table names
-        c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = c.fetchall()
-        
-        if not tables:
-            print("No tables found in the database.")
-            return
-
-        for table in tables:
-            table_name = table[0]
-            print(f"\n--- Table: {table_name} ---")
-            
-            # Get column information to use as DataFrame headers
-            c.execute(f"PRAGMA table_info({table_name});")
-            column_info = c.fetchall()
-            column_names = [col[1] for col in column_info]
-            
-            # Select all data from the table
-            c.execute(f"SELECT * FROM {table_name} limit 25 offset 20;")
-            rows = c.fetchall()
-            
-            # Print as DataFrame for better readability
-            if rows:
-                df = pd.DataFrame(rows, columns=column_names)
-                print(df.to_string()) # Use to_string() to avoid truncation
-            else:
-                print("Empty table.")
-            
-    except sqlite3.Error as e:
-        print(f"An error occurred while displaying tables: {e}")
-    finally:
-        if conn:
-            conn.close()
-    
-
-
+# Call the functions at the end of your script
 if __name__ == '__main__':
-    db_name = 'restaurant_.db'
+    # Assume your other functions create and populate the database first.
+    # create_restaurant_tables()
+    # insert_data_into_tables()
     
-    # Step 1: Ensure tables are created (this will also close its own connection)
-    create_restaurant_tables(db_name)
-    
-    # Step 2: Open a single, persistent connection for subsequent operations
-    conn = sqlite3.connect(db_name)
-    
-    try:
-        # Step 3: Add the 'Recipe_Unit' column if it doesn't exist. This needs the open connection.
-        add_recipe_unit_column(conn)
+    conn = sqlite3.connect('restaurant.db')
+    deplete_inventory_with_units(conn)
+    conn.close()
 
-        # Step 4: Insert all data using the shared connection
-        insert_data_into_tables(conn)
 
-        # Step 5: Run the inventory depletion using the same shared connection
-        deplete_inventory_with_units(conn)
+# Call the functions to create tables and insert data
+create_restaurant_tables()
+insert_data_into_tables() # This now calls deplete_inventory_from_orders internally
 
-        # Step 6: Display the content of all tables after operations are complete
-        # We need to explicitly pass the connection for this operation
-        # or re-open it if show_all_tables_content closes its own.
-        # For simplicity and to avoid nested connections, I'll modify show_all_tables_content
-        # to open its own connection for this standalone call if it doesn't already.
-        # However, it's better to keep it consistent. Let's pass the db_name instead.
-        print("\n--- Displaying all table contents after operations ---")
-        show_all_tables_content(db_name) # Pass the database name
-        
-    except sqlite3.Error as e:
-        print(f"A general SQLite error occurred during main execution: {e}") 
-    except Exception as e:
-        print(f"An unexpected error occurred during main execution: {e}")
-    finally:
-        # Step 7: Close the single, persistent connection
-        if conn:
-            conn.close()
-            print("\nDatabase connection closed.")
+
+
+# Open a single connection to the database
+conn = sqlite3.connect('restaurant.db')
+
+try:
+    # Pass the open connection to the insertion function
+    insert_data_into_tables(conn)
+
+    # Pass the same open connection to the depletion function
+    deplete_inventory_with_units(conn)
+
+except sqlite3.Error as e:
+    print(f"An error occurred: {e}")
+
+finally:
+    # Close the connection only once, after all operations are complete
+    if conn:
+        conn.close()
+        print("\nDatabase connection closed.")

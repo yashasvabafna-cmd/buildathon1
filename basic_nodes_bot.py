@@ -26,6 +26,8 @@ from promptstore import orderPrompt, conversationPrompt, agentPrompt, routerProm
 from Classes import Item, Order
 from utils import makeRetriever, get_context
 from dataclasses import field
+import sqlite3
+import SQLFILES
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -33,13 +35,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 parser = PydanticOutputParser(pydantic_object=Order)
-menu = pd.read_csv("datafiles/testmenu100.csv")
+menu = pd.read_csv("datafiles/meals.csv")
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     internals: Annotated[list, add]     # using this for internal info passing
     most_recent_order: object
     cart: list
-    rejected_items: list[tuple]
+    rejected_items: list[dict]
+    menu_query: object
 class MenuValidator:
     def __init__(self, menu_df):
         self.menu_df = menu_df
@@ -95,10 +98,10 @@ class MenuValidator:
         
         # Sort by similarity (highest first)
         similar_items.sort(key=lambda x: x['similarity'], reverse=True)
-        return similar_items[:3]  # Return top 3 matches
+        return similar_items[:5] # Return top 5 matches
     
     def validate_item(self, item_name: str) -> dict:
-        """Comprehensive item validation"""
+        """Comprehensive item validation, """
         # Try exact match first
         exact = self.find_exact_match(item_name)
         if exact['found']:
@@ -204,7 +207,7 @@ def routeFunc(state: State):
 
     # print(internals)
 
-    if last_m.strip().lower() in ["extract", "conversation"]:
+    if last_m.strip().lower() in ["extract", "conversation","menu_query"]:
         return last_m.strip().lower()
     else:
         print(f"unrecognized router output - {last_m}")
@@ -217,37 +220,80 @@ menuembeddings = embedder.encode(menu['item_name'].tolist())
 menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
 
 
+
 def processOrder(state: State):
     mro = state["most_recent_order"]
     cart = state["cart"]
     rej_items = []
 
     for item in mro.items:
-        # removal/deletion case first (keep your deletion logic as before)
-        if item.delete:
+        # Handle deletion
+        if getattr(item, "delete", False):
+            deleted = False
             for i, added_item in enumerate(cart):
+                # Check for exact match with item name and modifiers
                 if item.item_name.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
                     cart[i].quantity -= item.quantity
+                    deleted = True
                     break
+                # Fallback to match by item name only
                 elif item.item_name.lower().strip() == added_item.item_name.lower().strip():
                     cart[i].quantity -= item.quantity
+                    deleted = True
                     break
-            continue
+            if deleted:
+                continue
+            else:
+                continue
 
-        
-        result = menu_validator.validate_item(item.item_name)
-        if result.get('found', False):
-            # Exact or partial match, add to cart
-            cart.append(Item(item_name=result['item'], quantity=item.quantity, modifiers=item.modifiers))
-        elif result.get('similar_items'):
-            for sim in result['similar_items']:
-                rej_items.append((item.item_name, sim['item']))
+        # Handle modification
+        elif getattr(item, "modify", False):
+            modified = False
+            for i, added_item in enumerate(cart):
+                if item.item_name.lower().strip() == added_item.item_name.lower().strip():
+                    if item.quantity is not None:
+                        cart[i].quantity = item.quantity
+                    if hasattr(item, "modifiers") and item.modifiers is not None:
+                        cart[i].modifiers = item.modifiers
+                    modified = True
+                    break
+            if modified:
+                continue
+            else:
+                rej_items.append({"original_request": item.item_name, "reason": "modification_failed"})
+                continue
+
+        # ADD or UPDATE item
         else:
-            # No matches found at all
-            rej_items.append((item.item_name, None))
+            base_name = item.item_name.lower().strip()
+            result = menu_validator.validate_item(base_name)
 
+            if result.get('found', False):
+                # Item exists in menu, add or update quantity with modifiers intact
+                found_existing = False
+                for i, added_item in enumerate(cart):
+                    if base_name == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
+                        cart[i].quantity += item.quantity
+                        found_existing = True
+                        break
+                if not found_existing:
+                    cart.append(Item(item_name=result['item'], quantity=item.quantity, modifiers=item.modifiers))
+            elif result.get('similar_items'):
+                # Suggest alternatives
+                rej_items.append({
+                    "original_request": item.item_name,
+                    "similar_items": [s['item'] for s in result['similar_items']],
+                    "reason": "similar_items"
+                })
+            else:
+                # Completely unknown item
+                rej_items.append({"original_request": item.item_name, "reason": "unrecognized"})
+
+    # Remove zero or negative quantity items
     cart = [c for c in cart if c.quantity > 0]
+
     print(f"Your cart is now {cart}")
+
     return {
         "cart": cart,
         "rejected_items": rej_items
@@ -269,6 +315,7 @@ def summary_node(state: State):
     return {"messages": [msg]}
 
 def confirm_order(state: State):
+    """If the user asks to Confirm the Order call this function"""
     cart = state.get("cart", [])
     if not cart:
         summary = "Your cart is empty."
@@ -289,34 +336,45 @@ def confirm_order(state: State):
 
 def checkRejected(state: State):
     rej_items = state.get("rejected_items", [])
-    if not len(rej_items):
+    if not rej_items:
         return "summary_node"
-    else:
-        return "display_rejected"
+   
+    for item in rej_items:
+        if item.get('reason') == 'similar_items':
+            return "clarify_options"
 
-    
+    # For a completely unknown item
+    return "menu_query" # Corrected the routing name
+
 def display_rejected(state: State):
     rej_items = state.get("rejected_items", [])
-
-    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", name="display_rejected")
-
+    
+    # Corrected logic to handle dictionary items
+    unavailable_items = [item['original_request'] for item in rej_items]
+    alternatives = []
+    for item in rej_items:
+        if 'similar_items' in item:
+            alternatives.extend(item['similar_items'])
+    
+    m = AIMessage(f"The following items - {unavailable_items} are unavailable. You can try these alternatives from our menu instead: {alternatives}", name="display_rejected")
     return {"messages": [m]}
 
-def save_order_to_csv(cart, filename="orders.csv"):
-    # Create file with header if it doesn’t exist
-    file_exists = os.path.isfile(filename)
+def clarify_options_node(state: State):
+    rejected = state.get("rejected_items", [])
+    if rejected:
+        message = "I'm sorry, we don't have that exact item. Did you mean one of these?\n"
+        for item in rejected: # Iterating over dictionaries
+            original = item.get('original_request', 'N/A')
+            similar = item.get('similar_items', [])
+            
+            if similar:
+                message += f"For '{original}', you can choose from: {', '.join(similar)}\n"
+            else:
+                message += f"I can't find '{original}'. Is there something similar you'd like?\n"
+    else:
+        message = "There are no rejected items to clarify."
     
-    with open(filename, mode="a", newline="") as f:
-        writer = csv.writer(f)
-        
-        # Write header only once
-        if not file_exists:
-            writer.writerow(["timestamp", "item_name", "quantity", "modifiers"])
-        
-        # Write each item in the order
-        for item in cart:
-            modifiers = ", ".join(item.modifiers) if item.modifiers else ""
-            writer.writerow([datetime.now().isoformat(), item.item_name, item.quantity, modifiers])
+    return {"messages": [AIMessage(content=message)]}
 
 # graph
 def makegraph():
@@ -328,6 +386,7 @@ def makegraph():
     builder.add_node("confirm_order", confirm_order)
     builder.add_node("summary_node", summary_node)
     builder.add_node("display_rejected", display_rejected)
+    builder.add_node("clarify_options", clarify_options_node)
     builder.add_edge(START, "router")
     builder.add_conditional_edges(
         "router",
@@ -337,17 +396,21 @@ def makegraph():
             "conversation": "menu_query"
         }
     )
+
+    # Corrected Edge: This is the critical change.
+    # It now ends the stream after clarifying options.
+    builder.add_edge("clarify_options", END)
     builder.add_edge("extract_order", "process_order")
     builder.add_conditional_edges(
         "process_order",
         checkRejected, 
         {
             "summary_node": "summary_node",
-            "display_rejected": "display_rejected"
+            "clarify_options": "clarify_options",
+            "menu_query": "menu_query"
         }
     )
-
-    builder.add_edge("summary_node", END)
+    builder.add_edge("summary_node", "confirm_order")
     builder.add_edge("confirm_order", END)
     builder.add_edge("display_rejected", END)
     builder.add_edge("menu_query", END)
@@ -356,7 +419,6 @@ def makegraph():
 
     graph = builder.compile(checkpointer=memory)
     return graph
-
 # draw
 # ascii_rep = graph.get_graph().draw_ascii()
 # print(ascii_rep)
@@ -372,37 +434,46 @@ if __name__ == "__main__":
     
     thread_id = "abc123"
     config = {"configurable": {"thread_id": thread_id}}
-
+    
+    # Establish a single database connection for the entire session.
+    conn = sqlite3.connect('restaurant_.db')
+    
     graph.update_state(config, {
         "cart": [],
         "rejected_items": []
     })
 
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in {"quit", "exit"}:
-            print("Chatbot: Goodbye!")
-            break
-        # Add this check for confirmation:
-        if user_input.lower().strip() in {"yes", "y", "confirm"}:
-            cart = graph.get_state(config=config).values.get("cart", [])
-            if cart:
-                save_order_to_csv(cart)
-                print("Chatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
+    try:
+        while True:
+            user_input = input("You: ")
+            if user_input.lower() in {"quit", "exit"}:
+                print("Chatbot: Goodbye!")
                 break
-            else:
-                print("Chatbot: Your cart is empty, nothing to save.")
-                break
-
             
-        for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
-            for step, output in update.items():
-                if "messages" in output:
-                    for m in output["messages"]:
-                        if isinstance(m, (AIMessage, ToolMessage)):
-                            print(f"Chatbot: {m.content}")
-
-        # print(f"Your cart so far - {graph.get_state(config=config).values}")
+            if user_input.lower().strip() in {"checkout", "confirm", "yes","y"}:
+                cart = graph.get_state(config=config).values.get("cart", [])
+                if cart:
+                    # Save order using the persistent connection
+                    orders_data = [(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), item.item_name, item.quantity, str(item.modifiers)) for item in cart]
+                    SQLFILES.insert_orders_from_bot(conn, orders_data)
+                    print("Chatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
+                    break
+                else:
+                    print("Chatbot: Your cart is empty, nothing to save.")
+                    break
+                    
+            for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
+                for step, output in update.items():
+                    if "messages" in output:
+                        for m in output["messages"]:
+                            if isinstance(m, (AIMessage, ToolMessage)):
+                                print(f"Chatbot: {m.content}")
+            
+    finally:
+        # Close the connection only when the program exits the loop.
+        conn.close()
+        print("\nDatabase connection closed.")
+                # print(f"Your cart so far - {graph.get_state(config=config).values}")
 
         # cp = memory.get(config)       # MemorySaver.get(thread_id)
         # if cp is None:

@@ -1,0 +1,277 @@
+[
+    {
+        "meal_id": 1,
+        "name": "Paneer Tikka",
+        "ingredients": [
+            "250g paneer cubes",
+            "Onion",
+            "Capsicum",
+            "2 tbsp regular oil or mustard oil",
+            "1 tsp Kashmiri red chili powder",
+            "2 tsp coriander powder",
+            "1 tsp roasted cumin powder",
+            "1/2 tsp dried mango powder (amchur)",
+            "1 tsp garam masala",
+            "1 tsp dried fenugreek leaves (kasuri methi)",
+            "2 tsp ginger garlic paste",
+            "1 tsp roasted gram flour",
+            "1/4 tsp black pepper powder",
+            "1 tsp salt",
+            "Carom seeds",
+            "1/2 cup thick curd (yogurt)",
+            "Fresh coriander",
+            "Charcoal (for smoky flavor)",
+            "2 tsp oil and 1 tsp butter for cooking"
+        ],
+        "recipe_steps": "Marinate paneer and veggies in a mixture of yogurt and all spices for at least 30 minutes. Skewer and cook on a hot tawa, oven, or grill, brushing with oil/butter. Add smoky flavor using charcoal if available. Serve hot sprinkled with chaat masala."
+    },
+    {
+        "meal_id": 2,
+        "name": "Vegetable Samosa",
+        "ingredients": [
+            "1 tbsp sunflower oil",
+            "1 small onion, finely chopped",
+            "2 cloves garlic, finely chopped",
+            "1 small piece ginger, finely chopped",
+            "1/4 tsp ground coriander",
+            "1/4 tsp ground cumin",
+            "1 tsp garam masala",
+            "1/2 tsp chili powder (optional)",
+            "2 small potatoes, diced and boiled",
+            "1 carrot, diced",
+            "Handful frozen peas",
+            "Salt and pepper to taste",
+            "4 large sheets filo pastry (or frozen samosa sheets)",
+            "Sunflower oil for brushing and for frying",
+            "1 tbsp all-purpose flour + 3 tbsp water (for sealing)"
+        ],
+        "recipe_steps": "Saute onions, garlic, and ginger in oil until golden. Add spices, diced potatoes, carrot, and peas, and cook until soft. Mix in salt, pepper, and ketchup (optional). Fill filo pastry with the mixture, fold into samosas, seal with flour paste, and bake or deep fry until golden brown."
+    },
+    {
+        "meal_id": 3,
+        "name": "Onion Bhaji",
+        "ingredients": [
+            "200g onions, thinly sliced",
+            "1 green chili, finely chopped (optional)",
+            "1 tbsp ginger, minced or paste",
+            "1 tbsp garlic, minced or paste",
+            "1/4 cup chopped coriander leaves",
+            "3/4 cup gram flour (besan)",
+            "1/3 cup rice flour (or 1/4 cup corn starch)",
+            "1/2 to 3/4 tsp salt",
+            "1/8 tsp baking soda (optional)",
+            "1/2 tsp red chili powder or flakes",
+            "1 tsp coriander powder",
+            "1/2 tsp carom seeds (ajwain)",
+            "3/4 tsp garam masala",
+            "1 to 3 tbsp water (to make thick batter)",
+            "Oil for deep frying"
+        ],
+        "recipe_steps": "Mix onions with salt and let sit for 15-20 minutes. Combine with spices, flours, and water to make a thick batter. Fry spoonfuls in hot oil until golden and crisp. Best served immediately with sweet chili sauce or chutney."
+    },
+    {
+        "meal_id": 5,
+        "name": "Gobi Manchurian",
+        "ingredients": [
+            "Cauliflower",
+            "Plain flour (maida)",
+            "Corn flour",
+            "Red chili powder",
+            "Salt",
+            "Pepper",
+            "Water",
+            "Soy sauce",
+            "Red chili sauce",
+            "Tomato ketchup",
+            "Sugar",
+            "Vinegar",
+            "Garlic",
+            "Ginger",
+            "Green chilies",
+            "Spring onions",
+            "Bell pepper",
+            "Black pepper"
+        ],
+        "recipe_steps": "Clean cauliflower and blanch. Prepare batter with flours and spices. Coat cauliflower and deep fry twice. Prepare sauce with garlic, ginger, chilies, sauces, and cook till thick. Toss fried cauliflower in sauce and garnish with spring onions."
+    },
+    {
+        "meal_id": 6,
+        "name": "Crispy Corn",
+        "ingredients": [
+            "Sweet corn kernels",
+            "Cornflour/corn starch",
+            "All purpose flour (maida)",
+            "Rice flour",
+            "Salt",
+            "Black pepper powder",
+            "Peri peri seasoning",
+            "Lemon juice",
+            "Onion",
+            "Green chillies",
+            "Coriander leaves",
+            "Oil for frying"
+        ],
+        "recipe_steps": "Boil corn kernels and drain. Toss with salt, pepper, and flours. Deep fry until crispy. Toss with seasoning, lemon juice, onion, chillies, and coriander. Serve immediately."
+    },
+    {
+        "meal_id": 7,
+        "name": "Dahi Ke Kebab",
+        "ingredients": [
+            "Hung curd",
+            "Grated cheese",
+            "Roasted chana dal powder",
+            "Ginger",
+            "Green chillies",
+            "Black pepper powder",
+            "Cardamom powder",
+            "Chaat masala",
+            "Coriander",
+            "Salt",
+            "Refined flour",
+            "Cornstarch",
+            "Water",
+            "Bread crumbs",
+            "Corn flakes"
+        ],
+        "recipe_steps": "Mix hung curd, cheese, chana dal powder, ginger, green chillies, pepper, cardamom, chaat masala, coriander, salt. Shape tikkis, coat with flour, dip in slurry, then coat with bread crumbs and corn flakes. Refrigerate and deep fry till crisp."
+    },
+    {
+        "meal_id": 8,
+        "name": "Aloo Tikki",
+        "ingredients": [
+            "Boiled potatoes",
+            "Green chili",
+            "Ginger garlic paste",
+            "Red chili powder",
+            "Turmeric powder",
+            "Garam masala powder",
+            "Cumin powder",
+            "Chat masala powder",
+            "Corn flour",
+            "Breadcrumbs",
+            "Coriander leaves",
+            "Salt",
+            "Oil for frying"
+        ],
+        "recipe_steps": "Mash boiled potatoes and mix with spices, corn flour, breadcrumbs, coriander, and salt. Shape into small balls and flatten. Deep fry till golden brown. Serve with chutney."
+    },
+    {
+        "meal_id": 9,
+        "name": "Chicken Tikka",
+        "ingredients": [
+            "Boneless chicken thighs",
+            "Yogurt",
+            "Ginger garlic paste",
+            "Lemon juice",
+            "Kashmiri chili powder",
+            "Turmeric powder",
+            "Cumin powder",
+            "Coriander powder",
+            "Garam masala powder",
+            "Salt",
+            "Capsicum",
+            "Tomato",
+            "Onion",
+            "Oil or butter"
+        ],
+        "recipe_steps": "Marinate chicken with yogurt and spices for 2+ hours. Skewer with onions, tomatoes, capsicum. Grill or bake at 250C for 12-15 mins, basting with oil or butter. Serve hot with chaat masala."
+    },
+    {
+        "meal_id": 10,
+        "name": "Seekh Kebab",
+        "ingredients": [
+            "Ground chicken",
+            "Red onion",
+            "Garlic paste",
+            "Ginger paste",
+            "Green chilies",
+            "Coriander seeds",
+            "Garam masala",
+            "Ground cumin",
+            "Kashmiri red chili powder",
+            "Cilantro",
+            "Salt",
+            "Olive oil"
+        ],
+        "recipe_steps": "Mix ingredients well and chill for 30 mins+. Shape onto skewers. Bake at 400F for 10-15 mins until golden brown with charred edges. Serve with mint chutney or yogurt."
+    },
+    {
+        "meal_id": 11,
+        "name": "Fish Amritsari",
+        "ingredients": [
+            "White fish fillets",
+            "Ginger garlic paste",
+            "Salt",
+            "Turmeric powder",
+            "Kasuri methi",
+            "Ajwain (carom seeds)",
+            "Red chili powder",
+            "Lemon juice",
+            "Garam masala",
+            "Gram flour (besan)",
+            "Amchur powder",
+            "Curd or water",
+            "Oil for frying"
+        ],
+        "recipe_steps": "Marinate fish with spices, curd or water. Deep fry in hot oil until golden and crisp. Serve with lemon wedges."
+    },
+    {
+        "meal_id": 12,
+        "name": "Prawn Fry",
+        "ingredients": [
+            "Prawns",
+            "Lemon juice",
+            "Oil",
+            "Ginger garlic paste",
+            "Salt",
+            "Turmeric",
+            "Red chili powder",
+            "Garam masala",
+            "Coriander powder",
+            "Cumin seeds",
+            "Green cardamom",
+            "Onion",
+            "Green chili",
+            "Curry leaves"
+        ],
+        "recipe_steps": "Marinate prawns with spices and lemon juice. Stir fry cumin seeds, cardamom, onions, chili, and curry leaves. Add prawns and cook until curled up and fully cooked. Serve with rice."
+    },
+    {
+        "meal_id": 13,
+        "name": "Mutton Shammi Kebab",
+        "ingredients": [
+            "Minced mutton",
+            "Chana dal",
+            "Ginger garlic paste",
+            "Green chili",
+            "Coriander leaves",
+            "Cumin powder",
+            "Garam masala",
+            "Salt",
+            "Pepper",
+            "Eggs",
+            "Bread crumbs",
+            "Oil for frying"
+        ],
+        "recipe_steps": "Cook mutton and chana dal until soft. Blend with spices, eggs, and bread crumbs. Shape into patties. Deep fry until golden brown. Serve hot."
+    },
+    {
+        "meal_id": 14,
+        "name": "Chicken 65",
+        "ingredients": [
+            "Chicken",
+            "Ginger garlic paste",
+            "Chili powder",
+            "Turmeric powder",
+            "Yogurt",
+            "Corn flour",
+            "Egg",
+            "Salt",
+            "Oil for frying",
+            "Curry leaves",
+            "Lemon juice"
+        ],
+        "recipe_steps": "Marinate chicken with spices and yogurt. Coat in corn flour and egg batter. Deep fry until crispy. Fry curry leaves separately. Garnish with curry leaves and lemon juice before serving."
+    },
+    
+]
