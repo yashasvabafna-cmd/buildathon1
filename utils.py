@@ -4,7 +4,7 @@ from langchain.schema import Document
 
 def makeRetriever(menu, search_type="similarity", k=10):    
     docs = [
-        Document(page_content=f"{menu.iloc[i]['item_name']} - ${menu.iloc[i]['price']} ({menu.iloc[i]['category']})", metadata=menu.iloc[i].to_dict())
+        Document(page_content=f"{menu.iloc[i]['item_name']} - ${menu.iloc[i]['price']} ({menu.iloc[i]['category']})", metadata={"index":i})
         for i in range(len(menu))
     ]
 
@@ -17,3 +17,12 @@ def get_context(query, retriever):
     rel_docs = retriever.get_relevant_documents(query)
     context = "\n".join([doc.page_content for doc in rel_docs])
     return rel_docs, context
+
+def threshold_search(query, vectorstore, emb_thresh):
+    temp = vectorstore.similarity_search_with_relevance_scores(query=query, k=10, score_threshold=emb_thresh)
+    res = []
+    scores = []
+    for doc, score in temp:
+        res.append(doc.page_content)
+        scores.append(score)
+    return res, scores

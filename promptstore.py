@@ -1,15 +1,44 @@
 from langchain.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 
+'''
 orderPrompt = ChatPromptTemplate.from_messages([
     ("system", """
-                1. You are an order-taking assistant. Extract the customer's order from the input. 
+                1. You are an order-handling assistant. Extract the customer's order from the input. 
                 2. Pay attention to modifiers like "no sugar" or "extra cheese" that will usually be written after item names.
                 3. Only return valid JSON output in this format: {format_instructions}
-                4. NEVER include any additional text or explanations, preceding or following the JSON.
-                5. ONLY set the delete field in an Item to True if the user clearly indicates they want to "remove" or "delete" or "cancel" an item.
+                4. Put items the user wants into the `items` field.
+                5. If the user indicates they want to remove or delete any items, put those items with their accurate quantities in the `delete` field. This may be indicated by the user saying "remove", "delete", "cancel", or similar words.
+                6. NEVER put the same item in both `items` and `delete`.
+                7. NEVER include any additional text or explanations, preceding or following the JSON.
                 """),
     ("human", "{user_input}")
 ])
+'''
+
+orderPrompt = ChatPromptTemplate.from_messages([
+    ("system", """
+You are an order-taking assistant.
+
+Your task is to convert the customer's request into a JSON object that matches the given schema.
+
+Rules:
+1. Output only valid JSON, nothing else.
+2. The JSON must always include both fields: "items" and "delete".
+   - If no items are being ordered, set "items": [].
+   - If no items are being removed, set "delete": [].
+3. Each entry in "items" or "delete" must include:
+   - "item_name" (string)
+   - "quantity" (integer)
+   - "modifiers" (array of strings, [] if none)
+4. Do not guess or invent items. Only include what the user explicitly says.
+5. Never include the same item in both "items" and "delete".
+6. Do not include any text or explanation before or after the JSON.
+
+{format_instructions}
+"""),
+    ("human", "{user_input}")
+])
+
 
 conversationPrompt = ChatPromptTemplate(
     [

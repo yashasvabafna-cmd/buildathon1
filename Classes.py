@@ -7,10 +7,10 @@ class Item(BaseModel):
     item_name: str
     quantity: int
     modifiers: List[str] = []
-    delete: bool = False
 
 class Order(BaseModel):
     items: List[Item]
+    delete: List[Item]
 
 class OrderUpdate(BaseModel):
     def count_ordered_items(self, order: Order, menu: pd.DataFrame) -> pd.DataFrame:

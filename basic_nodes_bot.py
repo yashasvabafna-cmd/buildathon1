@@ -15,16 +15,21 @@ from langchain.chat_models import init_chat_model
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
+
 from sentence_transformers import SentenceTransformer
 from difflib import SequenceMatcher
+from rank_bm25 import BM25Okapi
+from searchers import MultiSearch
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
 from promptstore import orderPrompt, conversationPrompt, agentPrompt, routerPrompt
-from Classes import Item, Order
-from utils import makeRetriever, get_context
+from classes import Item, Order
+from utils import makeRetriever, get_context, threshold_search
 from dataclasses import field
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -33,101 +38,17 @@ import warnings
 warnings.filterwarnings("ignore")
 
 parser = PydanticOutputParser(pydantic_object=Order)
+# print(parser.get_format_instructions())
 menu = pd.read_csv("datafiles/testmenu100.csv")
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     internals: Annotated[list, add]     # using this for internal info passing
     most_recent_order: object
     cart: list
     rejected_items: list[tuple]
-class MenuValidator:
-    def __init__(self, menu_df):
-        self.menu_df = menu_df
-        # Create lowercase version for matching
-        self.menu_df['item_name_lower'] = self.menu_df['item_name'].str.lower()
-        self.menu_items = self.menu_df['item_name_lower'].tolist()
-    
-    def find_exact_match(self, item_name: str) -> dict:
-        """Find exact match for item in menu"""
-        item_lower = item_name.lower().strip()
-        match = self.menu_df[self.menu_df['item_name_lower'] == item_lower]
-        
-        if not match.empty:
-            return {
-                'found': True,
-                'item': match.iloc[0]['item_name'],
-                'price': match.iloc[0]['price'],
-                'match_type': 'exact'
-            }
-        return {'found': False}
-    
-    def find_partial_match(self, item_name: str) -> dict:
-        """Find partial matches (contains)"""
-        item_lower = item_name.lower().strip()
-        
-        # Check if item name contains menu item or vice versa
-        for _, row in self.menu_df.iterrows():
-            menu_item = row['item_name_lower']
-            if (item_lower in menu_item) or (menu_item in item_lower):
-                return {
-                    'found': True,
-                    'item': row['item_name'],
-                    'price': row['price'],
-                    'match_type': 'partial'
-                }
-        return {'found': False}
-    
-    def find_similar_items(self, item_name: str, threshold=0.6) -> list:
-        """Find similar items using fuzzy matching"""
-        item_lower = item_name.lower().strip()
-        similar_items = []
-        
-        for _, row in self.menu_df.iterrows():
-            menu_item = row['item_name_lower']
-            similarity = SequenceMatcher(None, item_lower, menu_item).ratio()
-            
-            if similarity >= threshold:
-                similar_items.append({
-                    'item': row['item_name'],
-                    'price': row['price'],
-                    'similarity': similarity
-                })
-        
-        # Sort by similarity (highest first)
-        similar_items.sort(key=lambda x: x['similarity'], reverse=True)
-        return similar_items[:3]  # Return top 3 matches
-    
-    def validate_item(self, item_name: str) -> dict:
-        """Comprehensive item validation"""
-        # Try exact match first
-        exact = self.find_exact_match(item_name)
-        if exact['found']:
-            return exact
-        
-        # Try partial match
-        partial = self.find_partial_match(item_name)
-        if partial['found']:
-            return partial
-        
-        # Find similar items
-        similar = self.find_similar_items(item_name)
-        if similar:
-            return {
-                'found': False,
-                'similar_items': similar,
-                'original_request': item_name
-            }
-        
-        # No matches found
-        return {
-            'found': False,
-            'original_request': item_name,
-            'similar_items': []
-        }
 
-# ✅ Initialize menu validator
-menu_validator = MenuValidator(menu)
-
+menu_searcher = MultiSearch(menu, bm_thresh= 0.01)
 
 # Defining chains and tools
 
@@ -136,6 +57,13 @@ orderChain = orderPrompt | llm | parser
 conversationChain = conversationPrompt | llm
 routerChain = routerPrompt | llm
 retriever = makeRetriever(menu, search_type="similarity", k=10)
+corpus = list(menu["item_name"])
+tcorpus = [c.lower().split() for c in corpus]
+bm_searcher = BM25Okapi(tcorpus)
+embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+vectordb = FAISS.from_texts(corpus, embedder)
+emb_thresh=0.5
+seq_thresh=0.5
 
 def router_node(state: State):
     """
@@ -173,6 +101,7 @@ def extract_order_node(state: State):
         })
         return {"internals": [AIMessage(content=result.model_dump_json(), name="extract")], "most_recent_order": result}
     except Exception as e:
+        print("order parsing error!")
         return {"messages": [AIMessage(content=f"Error parsing order: {str(e)}")]}
     
 def menu_query_node(state: State):
@@ -184,10 +113,10 @@ def menu_query_node(state: State):
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
             user_input = m.content
-            print(f"DEBUG - PROCESSING MESSAGE: ")
+            # print(f"DEBUG - PROCESSING MESSAGE: ")
             break
 
-    print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
+    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     
     rel_docs, context = get_context(user_input, retriever)
     ai_response = conversationChain.invoke({
@@ -213,42 +142,101 @@ def routeFunc(state: State):
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
 
 # save static version
-menuembeddings = embedder.encode(menu['item_name'].tolist())
-menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
+# menuembeddings = embedder.encode(menu['item_name'].tolist())
+# menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
+
+def deleteOrder(state: State):
+    mro = state["most_recent_order"]
+    cart = state["cart"]
+    for item in mro.delete:
+    # removal/deletion case first (keep your deletion logic as before)
+        for i, added_item in enumerate(cart):
+            if item.item_name.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
+                cart[i].quantity -= item.quantity
+                break
+            elif item.item_name.lower().strip() == added_item.item_name.lower().strip():
+                cart[i].quantity -= item.quantity
+                break
+    cart = [c for c in cart if c.quantity > 0]
+    print(f"Your cart is now {cart}")
+    return {
+        "cart": cart
+    }
 
 
 def processOrder(state: State):
     mro = state["most_recent_order"]
     cart = state["cart"]
     rej_items = []
-
-    for item in mro.items:
-        # removal/deletion case first (keep your deletion logic as before)
-        if item.delete:
-            for i, added_item in enumerate(cart):
-                if item.item_name.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
-                    cart[i].quantity -= item.quantity
-                    break
-                elif item.item_name.lower().strip() == added_item.item_name.lower().strip():
-                    cart[i].quantity -= item.quantity
-                    break
-            continue
-
         
-        result = menu_validator.validate_item(item.item_name)
-        if result.get('found', False):
-            # Exact or partial match, add to cart
+    new_messages = []
+    print(f"mro items - {mro.items}")
+    print(f"mro delete - {mro.delete}")
+    for item in mro.items:
+        # pass something to internal for each of the 3 scenarios so you can make conditional edges for all 3 later.
+        # print(type(mro), type(item), type(mro.model_dump_json()))
+        result = menu_searcher.unify(item.item_name, bm_searcher=bm_searcher, vectordb=vectordb, emb_thresh=emb_thresh, seq_thresh=seq_thresh)
+        
+        if result.get('exact', False):
+            # Exact match
             cart.append(Item(item_name=result['item'], quantity=item.quantity, modifiers=item.modifiers))
-        elif result.get('similar_items'):
-            for sim in result['similar_items']:
-                rej_items.append((item.item_name, sim['item']))
         else:
-            # No matches found at all
-            rej_items.append((item.item_name, None))
+            # no exact
+            # 3 scenarios
+            # 1. one very good match -> add directly to cart
+            # 2. multiple good matches -> ask for clarification
+            # 3. no good matches -> reject, and show best alternative (maybe use metadata based retriever which will be used by menu query)
 
-    cart = [c for c in cart if c.quantity > 0]
+            # certain match - 0.85 emb, 0.8 seq
+            # good match - 0.5 emb, 0.6 seq
+            # bad match - everything else
+
+            # one certain match
+            seq = result["seq"]
+            emb = result["emb"]
+
+            # print(seq)
+
+            certain_match_seq = [item for item, score in zip(seq["items"], seq["scores"]) if score >= 0.8]
+            certain_match_emb = [item for item, score in zip(emb["items"], emb["scores"]) if score >= 0.85]
+
+            certain_set = set(certain_match_seq + certain_match_emb)
+            if len(certain_set) == 1:
+                # add to cart
+                item_name = list(certain_set)[0]
+                cart.append(Item(item_name=item_name, quantity=item.quantity, modifiers=item.modifiers))
+                continue
+
+            elif len(certain_set) > 1:
+                # clarify -> go to clarify node to display options. or call a clarify function to do it here itself dont need another node?
+                s = f"We have the following options related to {item.item_name} -\n" + "\n".join(f"{i+1}. {opt}" for i, opt in enumerate(certain_set))
+                new_messages.append(AIMessage(s))
+                continue
+            
+            # no certains if code reaches here
+            
+            good_match_seq = [item for item, score in zip(seq["items"], seq["scores"]) if score >= 0.6]
+            good_match_emb = [item for item, score in zip(emb["items"], emb["scores"]) if score >= 0.5]
+            good_set = set(good_match_emb + good_match_seq)
+
+            if len(good_set) != 0:
+                # clarification
+                s = f"We have the following options related to {item.item_name} -\n" + "\n".join(f"{i+1}. {opt}" for i, opt in enumerate(good_set))
+                new_messages.append(AIMessage(s))
+                continue
+            else:
+                # bad. rejection logic.
+                similars = menu_searcher.embeddingSearch(item.item_name, vectordb=vectordb, emb_thresh=0)
+                # if not similars["found"]:
+                #     new_messages.append(AIMessage())
+
+                maxidx = np.argmax(similars["scores"])
+                rej_items.append((item.item_name, similars["items"][maxidx]))
+
+    
     print(f"Your cart is now {cart}")
     return {
+        "messages": new_messages,
         "cart": cart,
         "rejected_items": rej_items
     }
@@ -325,6 +313,7 @@ def makegraph():
     builder.add_node("extract_order", extract_order_node)
     builder.add_node("menu_query", menu_query_node)
     builder.add_node("process_order", processOrder)
+    builder.add_node("delete_order", deleteOrder)
     builder.add_node("confirm_order", confirm_order)
     builder.add_node("summary_node", summary_node)
     builder.add_node("display_rejected", display_rejected)
@@ -337,7 +326,9 @@ def makegraph():
             "conversation": "menu_query"
         }
     )
-    builder.add_edge("extract_order", "process_order")
+    
+    builder.add_edge("extract_order", "delete_order")
+    builder.add_edge("delete_order", "process_order")
     builder.add_conditional_edges(
         "process_order",
         checkRejected, 
@@ -346,7 +337,6 @@ def makegraph():
             "display_rejected": "display_rejected"
         }
     )
-
     builder.add_edge("summary_node", END)
     builder.add_edge("confirm_order", END)
     builder.add_edge("display_rejected", END)
@@ -358,10 +348,7 @@ def makegraph():
     return graph
 
 # draw
-# ascii_rep = graph.get_graph().draw_ascii()
-# print(ascii_rep)
-# graph.get_graph().draw_png("graph.png")
-# os.system("open graph.png")
+
 
 # state = State(messages=[])
 
@@ -369,8 +356,15 @@ def makegraph():
 
 if __name__ == "__main__":
     graph = makegraph()
-    
-    thread_id = "abc123"
+    draw = False
+
+    if draw:
+        ascii_rep = graph.get_graph().draw_ascii()
+        print(ascii_rep)
+        graph.get_graph().draw_png("graph.png")
+        os.system("open graph.png")
+
+    thread_id = "abc1234"
     config = {"configurable": {"thread_id": thread_id}}
 
     graph.update_state(config, {
