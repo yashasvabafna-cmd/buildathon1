@@ -5,8 +5,6 @@ import numpy as np
 import os
 import csv
 from datetime import datetime
-import subprocess
-import logging
 from dotenv import load_dotenv
 
 from langgraph.graph import StateGraph, START, END
@@ -18,7 +16,6 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 
-from sentence_transformers import SentenceTransformer
 from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
 from langchain_community.vectorstores import FAISS
@@ -146,23 +143,110 @@ def routeFunc(state: State):
 # menuembeddings = embedder.encode(menu['item_name'].tolist())
 # menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
 
-def deleteOrder(state: State):
+import numpy as np
+from difflib import SequenceMatcher
+
+def cosine_similarity(query_emb, doc_embs):
+    q = query_emb / np.linalg.norm(query_emb)
+    d = doc_embs / np.linalg.norm(doc_embs, axis=1, keepdims=True)
+    return np.dot(d, q)
+
+def deleteOrder(state: State, seq_thresh=0.6):
     mro = state["most_recent_order"]
     cart = state["cart"]
+    rej_items = []
+
+    # sequenceMatch function (pulled from MultiSearch)
+    def sequenceMatch(item_name, seq_threshold, items):
+        item_lower = item_name.lower().strip()
+        res, scores = [], []
+        for opt in items:
+            similarity = SequenceMatcher(None, item_lower, opt.lower()).ratio()
+            if similarity >= seq_threshold:
+                res.append(opt)
+                scores.append(similarity)
+        if res:
+            return {'found': True, 'items': res, 'scores': scores}
+        return {'found': False, 'items': [], 'scores': []}
+
     for item in mro.delete:
-    # removal/deletion case first (keep your deletion logic as before)
-        for i, added_item in enumerate(cart):
-            if item.item_name.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
-                cart[i].quantity -= item.quantity
-                break
-            elif item.item_name.lower().strip() == added_item.item_name.lower().strip():
-                cart[i].quantity -= item.quantity
-                break
+        cart_names = [c.item_name for c in cart]
+        if not cart_names:
+            continue
+
+        # 1. exact match
+        if item.item_name.lower().strip() in [c.lower() for c in cart_names]:
+            target_names = [item.item_name]
+        else:
+            # 2. sequence matching
+            seq = sequenceMatch(item.item_name, seq_thresh, cart_names)
+
+            # 3. embedding cosine similarity
+            query_emb = np.array(embedder.embed_query(item.item_name))
+            cart_embs = np.array(embedder.embed_documents(cart_names))
+            sims = cosine_similarity(query_emb, cart_embs)
+
+            # classify matches
+            certain_match_seq = [n for n, s in zip(seq["items"], seq["scores"]) if s >= 0.8]
+            certain_match_emb = [n for n, s in zip(cart_names, sims) if s >= 0.85]
+            certain_set = list(set(certain_match_seq + certain_match_emb))
+
+            if len(certain_set) == 1:
+                target_names = certain_set
+            elif len(certain_set) > 1:
+                print(f"Multiple matches found for '{item.item_name}':")
+                for i, opt in enumerate(certain_set, 1):
+                    print(f"{i}. {opt}")
+                try:
+                    choice = int(input("Which one would you like to remove? ")) - 1
+                    if 0 <= choice < len(certain_set):
+                        target_names = [certain_set[choice]]
+                    else:
+                        print("Invalid choice. Skipping this item.")
+                        continue
+                except ValueError:
+                    print("Invalid input. Skipping this item.")
+                    continue
+            else:
+                good_match_seq = [n for n, s in zip(seq["items"], seq["scores"]) if s >= 0.6]
+                good_match_emb = [n for n, s in zip(cart_names, sims) if s >= 0.5]
+                good_set = list(set(good_match_seq + good_match_emb))
+
+                if len(good_set) == 1:
+                    target_names = good_set
+                elif len(good_set) > 1:
+                    print(f"Possible matches for '{item.item_name}':")
+                    for i, opt in enumerate(good_set, 1):
+                        print(f"{i}. {opt}")
+                    try:
+                        choice = int(input("Which one would you like to remove? ")) - 1
+                        if 0 <= choice < len(good_set):
+                            target_names = [good_set[choice]]
+                        else:
+                            print("Invalid choice. Skipping this item.")
+                            continue
+                    except ValueError:
+                        print("Invalid input. Skipping this item.")
+                        continue
+                else:
+                    # rejection case → suggest closest by embedding
+                    maxidx = np.argmax(sims)
+                    rej_items.append((item.item_name, cart_names[maxidx]))
+                    continue
+
+        # perform deletion
+        for target in target_names:
+            for i, added_item in enumerate(cart):
+                if target.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
+                    cart[i].quantity -= item.quantity
+                    break
+                elif target.lower().strip() == added_item.item_name.lower().strip():
+                    cart[i].quantity -= item.quantity
+                    break
+
     cart = [c for c in cart if c.quantity > 0]
-    print(f"Your cart is now {cart}")
-    return {
-        "cart": cart
-    }
+    return {"cart": cart, "rejected_items": rej_items}
+
 
 
 def processOrder(state: State):
