@@ -1,0 +1,15 @@
+timestamp,item_name,quantity,modifiers
+<<<<<<< HEAD
+2025-08-18T23:06:42.855501,Veggie Burger,1,
+2025-08-18T23:06:42.855534,Veggie Burger,1,cheese
+2025-08-18T23:06:42.855539,Veggie Burger,1,extra cheese
+2025-08-18T23:06:42.855542,Veggie Burger,1,
+2025-08-18T23:23:53.735939,Diet Cola,1,no sugar
+2025-08-18T23:23:53.735976,Veggie Burger,1,extra cheese
+2025-08-18T23:23:53.735982,Classic Burger,1,
+2025-08-18T23:23:53.735986,French Fries,2,no sugar
+2025-08-21T21:57:25.550503,Classic Burger,1,
+2025-08-21T21:57:25.550574,Mushroom Swiss Burger,1,
+=======
+2025-08-20T17:17:38.021375,Paneer Butter Masala 799,1,
+>>>>>>> inventorymgmt

@@ -1,0 +1,101 @@
+meal_id,item_name,type,category,price,Chef_chef_id
+1,Paneer Tikka,veg,Starter,550.00,103
+2,Vegetable Samosa,veg,Starter,200.50,102
+3,Onion Bhaji,veg,Starter,250.75,102
+4,Hara Bhara Kebab,veg,Starter,325.20,102
+5,Gobi Manchurian,veg,Starter,400.00,101
+6,Crispy Corn,veg,Starter,280.90,102
+7,Dahi Ke Kebab,veg,Starter,450.30,103
+8,Aloo Tikki,veg,Starter,220.10,103
+9,Chicken Tikka,non-veg,Starter,600.00,102
+10,Seekh Kebab,non-veg,Starter,520.45,103
+11,Fish Amritsari,non-veg,Starter,710.80,103
+12,Prawn Fry,non-veg,Starter,680.15,101
+13,Mutton Shammi Kebab,non-veg,Starter,770.00,103
+14,Chicken 65,non-veg,Starter,580.60,102
+15,Chilli Chicken,non-veg,Starter,650.75,102
+16,Tandoori Chicken,non-veg,Starter,800.00,101
+17,Dal Makhani,veg,Main Course,350.50,102
+18,Palak Paneer,veg,Main Course,400.00,103
+19,Chole Bhature,veg,Main Course,280.00,102
+20,Malai Kofta,veg,Main Course,490.90,101
+21,Aloo Gobi,veg,Main Course,220.30,101
+22,Baingan Bharta,veg,Main Course,310.60,101
+23,Bhindi Masala,veg,Main Course,275.50,102
+24,Navratan Korma,veg,Main Course,530.00,101
+25,Butter Chicken,non-veg,Main Course,750.25,103
+26,Rogan Josh,non-veg,Main Course,820.70,103
+27,Goan Fish Curry,non-veg,Main Course,690.00,101
+28,Chicken Korma,non-veg,Main Course,780.45,103
+29,Hyderabadi Biryani,non-veg,Main Course,880.10,102
+30,Keema Matar,non-veg,Main Course,610.55,102
+31,Chicken Tikka Masala,non-veg,Main Course,760.30,103
+32,Laal Maas,non-veg,Main Course,920.00,101
+33,Tandoori Roti,veg,Bread,50.00,101
+34,Butter Naan,veg,Bread,75.00,102
+35,Garlic Naan,veg,Bread,85.00,103
+36,Jeera Rice,veg,Rice,150.00,102
+37,Chicken Biryani,non-veg,Rice,550.00,101
+38,Mutton Biryani,non-veg,Rice,650.00,103
+39,Gulab Jamun,veg,Dessert,120.00,102
+40,Gajar Ka Halwa,veg,Dessert,140.00,101
+41,Kheer,veg,Dessert,110.00,103
+42,Masala Chai,veg,Beverage,60.00,101
+43,Lassi,veg,Beverage,80.00,102
+44,Jaljeera,veg,Beverage,55.00,103
+45,Rajma Chawal,veg,Main Course,290.00,101
+46,Kadhi Pakora,veg,Main Course,260.00,102
+47,Missi Roti,veg,Bread,60.00,103
+48,Aloo Paratha,veg,Bread,90.00,102
+49,Paneer Paratha,veg,Bread,110.00,101
+50,Shahi Tukda,veg,Dessert,170.00,103
+51,Fruit Cream,veg,Dessert,150.00,101
+52,Pudina Chutney,veg,Accompaniment,40.00,102
+53,Raita,veg,Accompaniment,50.00,103
+54,Papad,veg,Accompaniment,25.00,101
+55,Onion Salad,veg,Accompaniment,30.00,102
+56,Tawa Roti,veg,Bread,40.00,103
+57,Palak Ki Puri,veg,Bread,80.00,101
+58,Methi Paratha,veg,Bread,95.00,102
+59,Aloo Chaat,veg,Starter,220.00,103
+60,Pani Puri,veg,Starter,180.00,101
+61,Dahi Vada,veg,Starter,200.00,102
+62,Bhel Puri,veg,Starter,190.00,103
+63,Veg Fried Rice,veg,Rice,350.00,101
+64,Schezwan Fried Rice,veg,Rice,380.00,102
+65,Paneer Fried Rice,veg,Rice,420.00,103
+66,Chicken Fried Rice,non-veg,Rice,450.00,101
+67,Chicken Hakka Noodles,non-veg,Rice,470.00,102
+68,Veg Hakka Noodles,veg,Rice,320.00,103
+69,Gobi 65,veg,Starter,250.00,102
+70,Pudina Paratha,veg,Bread,70.00,101
+71,Chur Chur Naan,veg,Bread,120.00,103
+72,Amritsari Kulcha,veg,Bread,130.00,102
+73,Mushroom Curry,veg,Main Course,380.00,101
+74,Corn Palak,veg,Main Course,310.00,103
+75,Mutter Paneer,veg,Main Course,390.00,102
+76,Dum Aloo,veg,Main Course,300.00,101
+77,Kashmiri Pulao,veg,Rice,280.00,103
+78,Veg Pulao,veg,Rice,250.00,102
+79,Egg Curry,non-veg,Main Course,320.00,101
+80,Malabar Parotta,veg,Bread,65.00,103
+81,Coconut Rice,veg,Rice,270.00,102
+82,Tomato Rice,veg,Rice,240.00,101
+83,Lemon Rice,veg,Rice,230.00,103
+84,Curd Rice,veg,Rice,210.00,102
+85,Masala Dosa,veg,Starter,150.00,101
+86,Idli Sambar,veg,Starter,120.00,103
+87,Medu Vada,veg,Starter,130.00,102
+88,Rasam,veg,Beverage,45.00,101
+89,Sambar,veg,Accompaniment,60.00,103
+90,Utthapam,veg,Starter,140.00,102
+91,Appam,veg,Bread,70.00,101
+92,Puttu,veg,Bread,85.00,103
+93,Kadala Curry,veg,Main Course,280.00,102
+94,Avial,veg,Main Course,300.00,101
+95,Kalan,veg,Main Course,290.00,103
+96,Pachadi,veg,Accompaniment,55.00,102
+97,Thakkali Satham,veg,Rice,260.00,101
+98,Masala Bhindi,veg,Main Course,270.00,103
+99,Thepla,veg,Bread,75.00,102
+100,Litti Chokha,veg,Main Course,330.00,101

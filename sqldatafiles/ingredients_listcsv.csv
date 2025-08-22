@@ -1,0 +1,49 @@
+ingredient_name,unit,current_inventory,order_date,reorder_level,supplier_id
+Paneer,kg,72.5,2025-08-19,18.13,Supplier001
+thick yogurt,L,2.4,2025-08-19,0.6,Supplier002
+ginger-garlic paste,ml,1500.0,2025-08-19,375.0,Supplier003
+turmeric,g,280.0,2025-08-19,70.0,Supplier001
+Kashmiri red chili powder,g,250.0,2025-08-19,62.5,Supplier002
+garam masala,g,250.0,2025-08-19,62.5,Supplier003
+chaat masala,g,250.0,2025-08-19,62.5,Supplier001
+lemon juice,ml,1500.0,2025-08-19,375.0,Supplier002
+onion,piece,350.0,2025-08-19,87.5,Supplier003
+bell pepper,piece,50.0,2025-08-19,12.5,Supplier001
+Salt,kg,15.0,2025-08-19,3.75,Supplier002
+Cooking Oil,L,50.0,2025-08-19,12.5,Supplier003
+all-purpose flour,kg,120.0,2025-08-19,30.0,Supplier001
+ghee,L,25.0,2025-08-19,6.25,Supplier002
+water,L,125.0,2025-08-19,31.25,Supplier003
+potatoes,kg,450.0,2025-08-19,112.5,Supplier001
+peas,kg,100.0,2025-08-19,25.0,Supplier002
+green chilies,g,750.0,2025-08-19,187.5,Supplier003
+Gobi,kg,250.0,2025-08-19,62.5,Supplier001
+cornflour,g,800.0,2025-08-19,200.0,Supplier002
+soy sauce,ml,750.0,2025-08-19,187.5,Supplier003
+chili sauce,ml,750.0,2025-08-19,187.5,Supplier001
+spring onion,g,250.0,2025-08-19,62.5,Supplier002
+cauliflower,kg,125.0,2025-08-19,31.25,Supplier003
+tomatoes,kg,150.0,2025-08-19,37.5,Supplier001
+ginger,kg,1.0,2025-08-19,0.25,Supplier002
+garlic,kg,2.5,2025-08-19,0.625,Supplier003
+curd,L,6.0,2025-08-19,1.5,Supplier001
+cream,L,25.0,2025-08-19,6.25,Supplier002
+cashew nuts,kg,25.0,2025-08-19,6.25,Supplier003
+fenugreek leaves,kg,25.0,2025-08-19,6.25,Supplier001
+Grated Paneer,kg,125.0,2025-08-19,31.25,Supplier002
+Tomato puree,L,100.0,2025-08-19,25.0,Supplier003
+Butter,kg,25.0,2025-08-19,6.25,Supplier001
+Sugar,kg,2.0,2025-08-19,0.5,Supplier002
+Cardamom,g,50.0,2025-08-19,12.5,Supplier003
+Cinnamon,kg,1.0,2025-08-19,0.25,Supplier001
+Cloves,g,50.0,2025-08-19,12.5,Supplier002
+whole wheat flour,kg,60.0,2025-08-19,15.0,Supplier003
+gram flour,kg,25.0,2025-08-19,6.25,Supplier001
+fenugreek leaves,kg,12.5,2025-08-19,3.13,Supplier002
+yogurt,L,30.0,2025-08-19,7.5,Supplier003
+red chili powder,g,250.0,2025-08-19,62.5,Supplier001
+asafoetida,kg,1.0,2025-08-19,0.25,Supplier002
+sattu,kg,50.0,2025-08-19,12.5,Supplier003
+pickle masala,kg,25.0,2025-08-19,6.25,Supplier001
+mustard oil,L,25.0,2025-08-19,6.25,Supplier002
+eggplant,kg,125.0,2025-08-19,31.25,Supplier003
