@@ -12,6 +12,21 @@
             "name": "RestaurantDB",
             "database": "RestaurantDB",
             "username": "RestaurantDB"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Restaurant1",
+            "database": "Restaurant_1",
+            "username": "root",
+            "password": "12345678",
+            "connectionTimeout": 30
         }
     ]
 }
