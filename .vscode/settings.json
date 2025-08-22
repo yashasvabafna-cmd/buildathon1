@@ -9,9 +9,11 @@
             "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "RestaurantDB",
-            "database": "RestaurantDB",
-            "username": "RestaurantDB"
+            "name": "Restaurant1",
+            "database": "Restaurant_1",
+            "username": "root",
+            "password": "12345678",
+            "connectionTimeout": 30
         },
         {
             "mysqlOptions": {
@@ -22,11 +24,10 @@
             "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "Restaurant1",
-            "database": "Restaurant_1",
+            "name": "RestaurantDB",
+            "database": "RestaurantDB",
             "username": "root",
-            "password": "12345678",
-            "connectionTimeout": 30
+            "askForPassword": true
         }
     ]
 }

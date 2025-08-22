@@ -20,8 +20,7 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
-# Removed: from langchain_community.vectorstores import FAISS # No longer needed for processOrder as a direct node
-
+from langchain_community.vectorstores import FAISS 
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from promptstore import orderPrompt, conversationPrompt, routerPrompt
@@ -47,7 +46,7 @@ warnings.filterwarnings("ignore")
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',        # Your MySQL username
-    'password': '12345678', # Your MySQL password
+    'password': '1234', # Your MySQL password
     'database': 'restaurant_new_db' # The database where 'Orders' table is
 }
 # ----------------------------------------------------
@@ -578,29 +577,19 @@ def confirm_order(state: State):
     return {"messages": [msg]}
 
 def checkRejected(state: State):
-    """Checks for rejected items and routes accordingly."""
     rej_items = state.get("rejected_items", [])
-    if not rej_items:
+    if not len(rej_items):
         return "summary_node"
-   
-    for item in rej_items:
-        if item.get('reason') == 'similar_items':
-            return "clarify_options"
-
-    return "menu_query"
+    else:
+        return "display_rejected"
 
 def display_rejected(state: State):
-    """Displays information about rejected items and suggested alternatives."""
     rej_items = state.get("rejected_items", [])
-    
-    unavailable_items = [item['original_request'] for item in rej_items]
-    alternatives = []
-    for item in rej_items:
-        if 'similar_items' in item:
-            alternatives.extend(item['similar_items'])
-    
-    m = AIMessage(f"The following items - {unavailable_items} are unavailable. You can try these alternatives from our menu instead: {alternatives}", name="display_rejected")
+
+    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", name="display_rejected")
+
     return {"messages": [m]}
+
 
 def clarify_options_node(state: State):
     """Provides clarification options for rejected items."""
