@@ -12,6 +12,7 @@ from langgraph.graph.message import add_messages
 from operator import add
 
 from langchain.chat_models import init_chat_model
+from langchain_groq import ChatGroq
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
@@ -51,11 +52,17 @@ class State(TypedDict):
 menu_searcher = MultiSearch(menu, bm_thresh= 0.01)
 
 # Defining chains and tools
+LLM_NAME="gpt-oss-120b-groq"
 
-llm = init_chat_model("ollama:llama3.1")
+if LLM_NAME == "llama-local":
+    llm = init_chat_model("ollama:llama3.1")
+elif LLM_NAME == "gpt-oss-120b-groq":
+    llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model='openai/gpt-oss-120b')
+
 orderChain = orderPrompt | llm | parser
 conversationChain = conversationPrompt | llm
 routerChain = routerPrompt | llm
+
 retriever = makeRetriever(menu, search_type="similarity", k=10)
 corpus = list(menu["item_name"])
 tcorpus = [c.lower().split() for c in corpus]
