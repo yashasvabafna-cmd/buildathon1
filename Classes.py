@@ -1,7 +1,10 @@
 from typing import List
 from pydantic import BaseModel
-import numpy as np
 import pandas as pd
+from typing import Annotated
+from typing_extensions import TypedDict
+from langgraph.graph.message import add_messages
+from operator import add
 
 class Item(BaseModel):
     item_name: str
@@ -50,3 +53,10 @@ class OrderUpdate(BaseModel):
                 data[mod].append(counts[name][mod])
         return pd.DataFrame(data)
 
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+    internals: Annotated[list, add]
+    most_recent_order: object
+    cart: list
+    rejected_items: list[dict]
+    menu_query: object

@@ -187,10 +187,10 @@ class MenuValidator:
         
         # Sort by similarity (highest first)
         similar_items.sort(key=lambda x: x['similarity'], reverse=True)
-        return similar_items[:3]  # Return top 3 matches
+        return similar_items[:5] # Return top 5 matches
     
     def validate_item(self, item_name: str) -> dict:
-        """Comprehensive item validation"""
+        """Comprehensive item validation, """
         # Try exact match first
         exact = self.find_exact_match(item_name)
         if exact['found']:
