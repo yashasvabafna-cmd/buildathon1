@@ -172,7 +172,7 @@ def insert_data_into_tables(conn):
 
         # --- Insert into Meals table from meals.csv ---
         try:
-            meals_df = pd.read_csv("meals.csv")
+            meals_df = pd.read_csv("sqldatafiles/meals.csv")
             meals_df.rename(columns={'item_name': 'name'}, inplace=True)
             insert_meal_query = "INSERT INTO Meals (meal_id, name, type, category, price, Chef_chef_id) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE name=VALUES(name);"
             meal_data = [tuple(row) for row in meals_df[['meal_id', 'name', 'type', 'category', 'price', 'Chef_chef_id']].to_numpy()]
@@ -184,7 +184,7 @@ def insert_data_into_tables(conn):
         # --- Insert into Ingredients table from ingredients_listcsv.csv ---
         ingredient_name_to_id = {} # To store mapping for recipes
         try:
-            ingredients_df = pd.read_csv("ingredients_listcsv.csv")
+            ingredients_df = pd.read_csv("sqldatafiles/ingredients_listcsv.csv")
             ingredients_data_tuples = []
             for index, row in ingredients_df.iterrows():
                 ingredients_data_tuples.append((
@@ -216,7 +216,7 @@ def insert_data_into_tables(conn):
 
         # --- Insert into Recipes and Recipe_Ingredients tables from recipes_batch_2.json ---
         try:
-            with open('recipes_batch_2.json', 'r') as f:
+            with open('sqldatafiles/recipes_batch_2.json', 'r') as f:
                 recipes_batch_2 = json.load(f)
 
             recipes_to_insert_main_table = [] # For the 'Recipes' table
