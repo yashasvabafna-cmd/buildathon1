@@ -5,7 +5,8 @@ import numpy as np
 import os
 from datetime import datetime
 
-def create_restaurant_tables(db_name='restaurant.db'):
+
+def create_restaurant_tables(db_name='restaurant1.db'):
     """
     Connects to an SQLite database and creates all necessary tables for
     a restaurant inventory and recipe management system.
@@ -80,11 +81,28 @@ def create_restaurant_tables(db_name='restaurant.db'):
         ''')
         print("Table 'Recipe_Ingredients' created or already exists.")
 
-        # Create Purchase_Orders table
+    
+       
+        # Create Orders table
+        c.execute('''
+                CREATE TABLE IF NOT EXISTS Orders (
+        Order_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        meal_id INTEGER NOT NULL,
+        quantity INTEGER NOT NULL,
+        modifiers TEXT,
+        FOREIGN KEY (meal_id) REFERENCES Meals(meal_id)
+        );
+        ''')
+        print("Table 'Orders' created or already exists.")
+
+        conn.commit()
+        print("\nAll tables created successfully!")
+            # Create Purchase_Orders table
         c.execute('''
             CREATE TABLE IF NOT EXISTS Purchase_Orders (
                 PO_ID INTEGER PRIMARY KEY,
-                Supplier_ID TEXT NOT NULL,
+                Supplier_ID TEXT,
                 Order_Date TEXT,
                 Expected_Delivery_Date TEXT,
                 Actual_Delivery_Date TEXT,
@@ -93,27 +111,25 @@ def create_restaurant_tables(db_name='restaurant.db'):
                 FOREIGN KEY (Supplier_ID) REFERENCES Suppliers(Supplier_ID)
             );
         ''')
-        print("Table 'Purchase_Orders' created or already exists.")
 
         # Create PO_Items table
         c.execute('''
             CREATE TABLE IF NOT EXISTS PO_Items (
                 PO_Item_ID INTEGER PRIMARY KEY,
-                PO_ID INTEGER NOT NULL,
-                Ingredient_ID INTEGER NOT NULL,
+                PO_ID INTEGER,
+                Ingredient_ID INTEGER,
                 Quantity_Ordered REAL,
                 Cost_at_Purchase REAL,
                 FOREIGN KEY (PO_ID) REFERENCES Purchase_Orders(PO_ID),
                 FOREIGN KEY (Ingredient_ID) REFERENCES Ingredients(ingredient_id)
             );
         ''')
-        print("Table 'PO_Items' created or already exists.")
 
         # Create Waste table
         c.execute('''
             CREATE TABLE IF NOT EXISTS Waste (
                 Waste_ID INTEGER PRIMARY KEY,
-                Ingredient_ID INTEGER NOT NULL,
+                Ingredient_ID INTEGER,
                 Quantity REAL,
                 Date TEXT,
                 Reason TEXT,
@@ -121,22 +137,6 @@ def create_restaurant_tables(db_name='restaurant.db'):
                 FOREIGN KEY (Ingredient_ID) REFERENCES Ingredients(ingredient_id)
             );
         ''')
-        print("Table 'Waste' created or already exists.")
-
-        # Create Orders table
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS Orders (
-                Order_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                item_name TEXT NOT NULL,
-                quantity INTEGER NOT NULL,
-                modifiers TEXT
-            );
-        ''')
-        print("Table 'Orders' created or already exists.")
-
-        conn.commit()
-        print("\nAll tables created successfully!")
         
     except sqlite3.Error as e:
         print(f"An error occurred during table creation: {e}")
@@ -176,7 +176,6 @@ def insert_data_into_tables(conn):
         print("\nInserted/Ignored data into Suppliers table.")
 
         # --- Insert into Meals table from meals.csv ---
-        meals_df = None
         try:
             meals_df = pd.read_csv("meals.csv")
             # Insert the entire DataFrame into the Meals table
@@ -184,7 +183,6 @@ def insert_data_into_tables(conn):
             print("Inserted/Ignored data into Meals table from meals.csv.")
         except FileNotFoundError:
             print("Warning: meals.csv not found. Skipping meal data insertion.")
-
 
         # --- Insert into Ingredients table from ingredients_listcsv.csv ---
         ingredients_df = None
@@ -472,17 +470,6 @@ def insert_data_into_tables(conn):
         c.executemany("INSERT OR IGNORE INTO Waste (Waste_ID, Ingredient_ID, Quantity, Date, Reason, Cost_of_Waste) VALUES (?, ?, ?, ?, ?, ?)", waste_data)
         print("Inserted/Ignored data into Waste table.")
 
-        # --- Insert into Orders table from orders.csv ---
-        if os.path.exists('orders.csv'):
-            orders_df = pd.read_csv('orders.csv')
-            orders_data = orders_df[['timestamp', 'item_name', 'quantity', 'modifiers']].values.tolist()
-            c.executemany("INSERT OR IGNORE INTO Orders (timestamp, item_name, quantity, modifiers) VALUES (?, ?, ?, ?)", orders_data)
-            print("Inserted data into Orders table.")
-        else:
-            print("Warning: orders.csv not found. Skipping Orders data insertion.")
-
-        conn.commit()
-        print("\nAll data inserted successfully!")
 
     except sqlite3.Error as e:
         print(f"An error occurred during data insertion: {e}")
@@ -502,17 +489,17 @@ def deplete_inventory_with_units(conn):
     }
 
     try:
+        
         # Step 1: Read all necessary data into Pandas DataFrames for easier manipulation.
         meals_df = pd.read_sql_query("SELECT meal_id, name FROM Meals;", conn)
-        # Ensure Recipe_Unit is selected here
         recipes_df = pd.read_sql_query("SELECT Meal_ID, Ingredient_ID, Quantity, Recipe_Unit FROM Recipe_Ingredients;", conn)
         ingredients_df = pd.read_sql_query("SELECT ingredient_id, current_inventory, unit FROM Ingredients;", conn)
-        orders_df = pd.read_sql_query("SELECT item_name, quantity FROM Orders;", conn)
+        # Use a new query for the updated Orders table
+        orders_df = pd.read_sql_query("SELECT meal_id, quantity FROM Orders;", conn)
 
-        # Step 2: Join the tables to get a complete view of orders and their ingredients.
-        # Use a case-insensitive join on meal names.
-        depletion_data = pd.merge(orders_df, meals_df, left_on=orders_df['item_name'].str.lower(), right_on=meals_df['name'].str.lower(), how='inner')
-        depletion_data = pd.merge(depletion_data, recipes_df, left_on='meal_id', right_on='Meal_ID', how='inner')
+        # Step 2: Join the tables directly on the foreign key (meal_id)
+        depletion_data = pd.merge(orders_df, recipes_df, left_on='meal_id', right_on='Meal_ID', how='inner')
+        depletion_data = pd.merge(depletion_data, ingredients_df, left_on='Ingredient_ID', right_on='ingredient_id', how='inner')
         depletion_data = pd.merge(depletion_data, ingredients_df, left_on='Ingredient_ID', right_on='ingredient_id', how='inner')
         
         # Step 3: Map conversion factors for both recipe units and inventory units
@@ -544,7 +531,30 @@ def deplete_inventory_with_units(conn):
     except Exception as e:
         print(f"An unexpected error occurred during inventory depletion: {e}")
 
-def show_all_tables_content(db_name='restaurant.db'):
+def insert_orders_from_bot(conn, order_data):
+    """
+    Inserts order data directly from the bot's 'cart' list into the Orders table,
+    using a meal_id lookup.
+    """
+    c = conn.cursor()
+    try:
+        meal_name_to_id = dict(c.execute("SELECT name, meal_id FROM Meals").fetchall())
+
+        orders_to_insert = []
+        for timestamp, item_name, quantity, modifiers in order_data:
+            meal_id = meal_name_to_id.get(item_name)
+            if meal_id is not None:
+                orders_to_insert.append((timestamp, meal_id, quantity, modifiers))
+            else:
+                print(f"Warning: Meal '{item_name}' not found. Skipping.")
+
+        # Step 3: Insert into the modified Orders table
+        c.executemany("INSERT OR IGNORE INTO Orders (timestamp, meal_id, quantity, modifiers) VALUES (?, ?, ?, ?)", orders_to_insert)
+        print("\nInserted data into Orders table from bot's cart.")
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"An error occurred while inserting orders: {e}")
+def show_all_tables_content(db_name='restaurant1.db'):
     """Connects to the database and prints the content of all tables."""
     conn = None
     try:
@@ -572,8 +582,8 @@ def show_all_tables_content(db_name='restaurant.db'):
             column_info = c.fetchall()
             column_names = [col[1] for col in column_info]
             
-            # Select all data from the tabl
-            c.execute(f"SELECT * FROM {table_name} limit 25;")
+            # Select all data from the table
+            c.execute(f"SELECT * FROM {table_name} limit 25 offset 20;")
             rows = c.fetchall()
             
             # Print as DataFrame for better readability
@@ -588,10 +598,21 @@ def show_all_tables_content(db_name='restaurant.db'):
     finally:
         if conn:
             conn.close()
-
+    
+def truncate_orders_table(conn):
+    """
+    Deletes all data from the 'Orders' table.
+    """
+    c = conn.cursor()
+    try:
+        c.execute("DELETE FROM Orders")
+        conn.commit()
+        print("All data has been cleared from the 'Orders' table.")
+    except sqlite3.Error as e:
+        print(f"An error occurred while truncating the Orders table: {e}")
 
 if __name__ == '__main__':
-    db_name = 'restaurant.db'
+    db_name = 'restaurant1.db'
     
     # Step 1: Ensure tables are created (this will also close its own connection)
     create_restaurant_tables(db_name)
@@ -605,9 +626,10 @@ if __name__ == '__main__':
 
         # Step 4: Insert all data using the shared connection
         insert_data_into_tables(conn)
-
+        
         # Step 5: Run the inventory depletion using the same shared connection
         deplete_inventory_with_units(conn)
+
 
         # Step 6: Display the content of all tables after operations are complete
         # We need to explicitly pass the connection for this operation
@@ -619,7 +641,7 @@ if __name__ == '__main__':
         show_all_tables_content(db_name) # Pass the database name
         
     except sqlite3.Error as e:
-        print(f"A general SQLite error occurred during main execution: {e}")
+        print(f"A general SQLite error occurred during main execution: {e}") 
     except Exception as e:
         print(f"An unexpected error occurred during main execution: {e}")
     finally:

@@ -5,6 +5,7 @@ import numpy as np
 import os
 import csv
 from datetime import datetime
+import json
 from dotenv import load_dotenv
 
 from langgraph.graph import StateGraph, START, END
@@ -19,11 +20,12 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
-from langchain_community.vectorstores import FAISS
+# Removed: from langchain_community.vectorstores import FAISS # No longer needed for processOrder as a direct node
+
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from promptstore import orderPrompt, conversationPrompt, routerPrompt
-from classes import Item, Order
+from classes import Item, Order # Assuming Item and Order are defined here
 from utils import makeRetriever, get_context
 
 trace = True
@@ -34,19 +36,239 @@ if trace:
     os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
     os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
     os.environ["LANGCHAIN_PROJECT"] = "default"
+import mysql.connector # Import mysql.connector for database operations
+from inventory_depletion import deplete_inventory_from_order # NEW: Import depletion function
 
 import warnings
 warnings.filterwarnings("ignore")
 
+# --- IMPORTANT: MySQL DB_CONFIG for basic_nodes_bot ---
+# Ensure these details match your 'restaurant_new_db' setup
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',        # Your MySQL username
+    'password': '12345678', # Your MySQL password
+    'database': 'restaurant_new_db' # The database where 'Orders' table is
+}
+# ----------------------------------------------------
+
+# Establish a single, persistent MySQL connection for the bot's session
+try:
+    mysql_conn = mysql.connector.connect(**DB_CONFIG)
+    print("MySQL connection established for basic_nodes_bot.")
+except mysql.connector.Error as err:
+    print(f"Error connecting to MySQL for basic_nodes_bot: {err}")
+    mysql_conn = None # Set to None if connection fails
+
+# Check if DB connection failed
+if mysql_conn is None:
+    print("FATAL: Database connection failed. Bot will not be able to save orders or deplete inventory.")
+
 parser = PydanticOutputParser(pydantic_object=Order)
-# print(parser.get_format_instructions())
-menu = pd.read_csv("datafiles/testmenu100.csv")
+menu = pd.read_csv("meals.csv")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
     internals: Annotated[list, add]     # using this for internal info passing
     most_recent_order: object
     cart: list
+    rejected_items: list[dict]
+    menu_query: object
+
+class MenuValidator:
+    def __init__(self, menu_df):
+        self.menu_df = menu_df
+        # Create lowercase version for matching
+        self.menu_df['item_name_lower'] = self.menu_df['item_name'].str.lower()
+        self.menu_items = self.menu_df['item_name_lower'].tolist()
+    
+    def find_exact_match(self, item_name: str) -> dict:
+        """Find exact match for item in menu"""
+        item_lower = item_name.lower().strip()
+        match = self.menu_df[self.menu_df['item_name_lower'] == item_lower]
+        
+        if not match.empty:
+            return {
+                'found': True,
+                'item': match.iloc[0]['item_name'],
+                'price': match.iloc[0]['price'],
+                'match_type': 'exact'
+            }
+        return {'found': False}
+    
+    def find_partial_match(self, item_name: str) -> dict:
+        """Find partial matches (contains)"""
+        item_lower = item_name.lower().strip()
+        
+        # Check if item name contains menu item or vice versa
+        for _, row in self.menu_df.iterrows():
+            menu_item = row['item_name_lower']
+            if (item_lower in menu_item) or (menu_item in item_lower):
+                return {
+                    'found': True,
+                    'item': row['item_name'],
+                    'price': row['price'],
+                    'match_type': 'partial'
+                }
+        return {'found': False}
+    
+    def find_similar_items(self, item_name: str, threshold=0.6) -> list:
+        """Find similar items using fuzzy matching"""
+        item_lower = item_name.lower().strip()
+        similar_items = []
+        
+        for _, row in self.menu_df.iterrows():
+            menu_item = row['item_name_lower']
+            similarity = SequenceMatcher(None, item_lower, menu_item).ratio()
+            
+            if similarity >= threshold:
+                similar_items.append({
+                    'item': row['item_name'],
+                    'price': row['price'],
+                    'similarity': similarity
+                })
+        
+        # Sort by similarity (highest first)
+        similar_items.sort(key=lambda x: x['similarity'], reverse=True)
+        return similar_items[:5] # Return top 5 matches
+    
+    def validate_item(self, item_name: str) -> dict:
+        """Comprehensive item validation, """
+        # Try exact match first
+        exact = self.find_exact_match(item_name)
+        if exact['found']:
+            return exact
+        
+        # Try partial match
+        partial = self.find_partial_match(item_name)
+        if partial['found']:
+            return partial
+        
+        # Find similar items
+        similar = self.find_similar_items(item_name)
+        if similar:
+            return {
+                'found': False,
+                'similar_items': similar,
+                'original_request': item_name
+            }
+        
+        # No matches found
+        return {
+            'found': False,
+            'original_request': item_name,
+            'similar_items': []
+        }
+
+# ✅ Initialize menu validator
+menu_validator = MenuValidator(menu)
+
+# --- Helper function to get current inventory for debugging ---
+def get_ingredient_current_inventory(ingredient_id, conn):
+    """Fetches the current_inventory for a given ingredient_id."""
+    if conn is None:
+        return None
+    try:
+        with conn.cursor() as cursor:
+            query = "SELECT ingredient_name, current_inventory, unit FROM Ingredients WHERE ingredient_id = %s;"
+            cursor.execute(query, (ingredient_id,))
+            result = cursor.fetchone()
+            if result:
+                return {"name": result[0], "inventory": result[1], "unit": result[2]}
+            return None
+    except mysql.connector.Error as err:
+        print(f"Error fetching inventory for ingredient ID {ingredient_id}: {err}")
+        return None
+
+def insert_orders_from_bot(order_data, conn):
+    """
+    Saves order data from the bot's 'cart' list directly to the MySQL 'Orders' table.
+    Then triggers inventory depletion and prints before/after inventory levels.
+    """
+    if conn is None:
+        print("Error: MySQL connection not established. Cannot save order.")
+        return
+
+    try:
+        with conn.cursor() as cursor:
+            meal_name_to_id = {}
+            try:
+                cursor.execute("SELECT name, meal_id FROM Meals")
+                meal_name_to_id = {name.lower(): meal_id for name, meal_id in cursor.fetchall()}
+            except mysql.connector.Error as err:
+                print(f"Error fetching meal_id mapping: {err}")
+                return
+
+            orders_to_insert = []
+            for item in order_data:
+                item_name = item.item_name
+                quantity = item.quantity
+                modifiers = json.dumps(item.modifiers) if item.modifiers else None
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                meal_id = meal_name_to_id.get(item_name.lower())
+                
+                if meal_id is not None:
+                    orders_to_insert.append((meal_id, item_name, quantity, modifiers, timestamp))
+                else:
+                    print(f"Warning: Meal '{item_name}' not found in database. Skipping this order item.")
+            
+            if orders_to_insert:
+                insert_query = """
+                INSERT INTO Orders (meal_id, item_name, quantity, modifiers, timestamp)
+                VALUES (%s, %s, %s, %s, %s);
+                """
+                cursor.executemany(insert_query, orders_to_insert)
+                conn.commit()
+                print(f"\nSuccessfully saved {len(orders_to_insert)} order items to the 'Orders' table.")
+                
+                # --- Pre-depletion Inventory Check ---
+                print("\n--- Pre-depletion Inventory Check ---")
+                ingredients_to_check = {} # {ingredient_id: (ingredient_name, unit)}
+                
+                # First, gather all unique ingredients involved in the *current* order from Recipe_Ingredients
+                for order_item in order_data:
+                    meal_id_for_item = meal_name_to_id.get(order_item.item_name.lower())
+                    if meal_id_for_item:
+                        recipe_query = """
+                        SELECT ri.ingredient_id, i.ingredient_name, i.unit
+                        FROM Recipe_Ingredients ri
+                        JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
+                        WHERE ri.meal_id = %s;
+                        """
+                        cursor.execute(recipe_query, (meal_id_for_item,))
+                        for ing_id, ing_name, ing_unit in cursor.fetchall():
+                            ingredients_to_check[ing_id] = {"name": ing_name, "unit": ing_unit}
+
+                # Now fetch their current inventory levels
+                ingredients_before_depletion = {} # {ingredient_id: {name, inventory, unit}}
+                for ing_id, ing_data in ingredients_to_check.items():
+                    inv = get_ingredient_current_inventory(ing_id, conn)
+                    if inv:
+                        ingredients_before_depletion[ing_id] = inv
+
+                for ing_id, inv_data in ingredients_before_depletion.items():
+                    print(f"  - BEFORE: {inv_data['name']} (ID: {ing_id}): {inv_data['inventory']} {inv_data['unit']}")
+
+
+                # --- Call inventory depletion from the separate module ---
+                # The deplete_inventory_from_order function itself will print detailed DEBUG messages
+                deplete_inventory_from_order(order_data, conn)
+
+                # --- Post-depletion Inventory Check ---
+                print("\n--- Post-depletion Inventory Check ---")
+                for ing_id, _ in ingredients_before_depletion.items(): # Use the same IDs checked before
+                    inv = get_ingredient_current_inventory(ing_id, conn)
+                    if inv:
+                        print(f"  - AFTER: {inv['name']} (ID: {ing_id}): {inv['inventory']} {inv['unit']}")
+
+            else:
+                print("\nNo valid order items to save to the 'Orders' table.")
+
+    except mysql.connector.Error as err:
+        print(f"An error occurred while saving orders to MySQL: {err}")
+    except Exception as e:
+        print(f"An unexpected error occurred while saving orders: {e}")
     rejected_items: list[tuple]
 
 menu_searcher = MultiSearch(menu, bm_thresh= 0.01)
@@ -73,28 +295,17 @@ emb_thresh=0.5
 seq_thresh=0.5
 
 def router_node(state: State):
-    """
-    Router node to classify user input as an order or a question about the menu.
-    """
-    
+    """Routes user input to either order extraction or menu query."""
     messages = state["messages"]
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
             user_input = m.content
             break
-    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
     response = routerChain.invoke({"user_input": [user_input]})
-    # print(f"raw router response - {response}")
-    # print(f".content - {response.content}")
     return {"internals": [response.content]}
 
 def extract_order_node(state: State):
-    """
-    Extract structured order JSON from user input.
-    """
-
-    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
-    
+    """Extracts structured order JSON from user input."""
     messages = state["messages"]
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
@@ -112,10 +323,7 @@ def extract_order_node(state: State):
         return {"messages": [AIMessage(content=f"Error parsing order: {str(e)}")]}
     
 def menu_query_node(state: State):
-    """
-    Answer questions about the menu.
-    """
-    
+    """Answers questions about the menu."""
     messages = state["messages"]
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
@@ -138,9 +346,7 @@ def routeFunc(state: State):
     internals = state["internals"]
     last_m = internals[-1]
 
-    # print(internals)
-
-    if last_m.strip().lower() in ["extract", "conversation"]:
+    if last_m.strip().lower() in ["extract", "conversation","menu_query"]:
         return last_m.strip().lower()
     else:
         print(f"unrecognized router output - {last_m}")
@@ -246,9 +452,11 @@ def deleteOrder(state: State, seq_thresh=0.6):
             for i, added_item in enumerate(cart):
                 if target.lower().strip() == added_item.item_name.lower().strip() and item.modifiers == added_item.modifiers:
                     cart[i].quantity -= item.quantity
+                    deleted = True
                     break
                 elif target.lower().strip() == added_item.item_name.lower().strip():
                     cart[i].quantity -= item.quantity
+                    deleted = True
                     break
 
     cart = [c for c in cart if c.quantity > 0]
@@ -327,6 +535,7 @@ def processOrder(state: State):
 
     
     print(f"Your cart is now {cart}")
+
     return {
         "messages": new_messages,
         "cart": cart,
@@ -334,6 +543,7 @@ def processOrder(state: State):
     }
 
 def summary_node(state: State):
+    """Generates a summary of the current order cart."""
     cart = state.get("cart", [])
     if not cart:
         summary = "Your cart is empty."
@@ -349,13 +559,13 @@ def summary_node(state: State):
     return {"messages": [msg]}
 
 def confirm_order(state: State):
+    """Prepares a confirmation message for the user's order."""
     cart = state.get("cart", [])
     if not cart:
         summary = "Your cart is empty."
     else:
         items = []
         for item in cart:
-            # Assuming Item has item_name, quantity, modifiers
             item_desc = f"{item.quantity} x {item.item_name}"
             if item.modifiers:
                 item_desc += f" ({', '.join(item.modifiers)})"
@@ -368,37 +578,48 @@ def confirm_order(state: State):
     return {"messages": [msg]}
 
 def checkRejected(state: State):
+    """Checks for rejected items and routes accordingly."""
     rej_items = state.get("rejected_items", [])
-    if not len(rej_items):
+    if not rej_items:
         return "summary_node"
-    else:
-        return "display_rejected"
+   
+    for item in rej_items:
+        if item.get('reason') == 'similar_items':
+            return "clarify_options"
 
-    
+    return "menu_query"
+
 def display_rejected(state: State):
+    """Displays information about rejected items and suggested alternatives."""
     rej_items = state.get("rejected_items", [])
-
-    m = AIMessage(f"The following items - {[n for (n, m) in rej_items]} are unavailable. You can try these alternatives from our menu instead: {[m for (n, m) in rej_items]}", name="display_rejected")
-
+    
+    unavailable_items = [item['original_request'] for item in rej_items]
+    alternatives = []
+    for item in rej_items:
+        if 'similar_items' in item:
+            alternatives.extend(item['similar_items'])
+    
+    m = AIMessage(f"The following items - {unavailable_items} are unavailable. You can try these alternatives from our menu instead: {alternatives}", name="display_rejected")
     return {"messages": [m]}
 
-def save_order_to_csv(cart, filename="orders.csv"):
-    # Create file with header if it doesn’t exist
-    file_exists = os.path.isfile(filename)
+def clarify_options_node(state: State):
+    """Provides clarification options for rejected items."""
+    rejected = state.get("rejected_items", [])
+    if rejected:
+        message = "I'm sorry, we don't have that exact item. Did you mean one of these?\n"
+        for item in rejected:
+            original = item.get('original_request', 'N/A')
+            similar = item.get('similar_items', [])
+            
+            if similar:
+                message += f"For '{original}', you can choose from: {', '.join(similar)}\n"
+            else:
+                message += f"I can't find '{original}'. Is there something similar you'd like?\n"
+    else:
+        message = "There are no rejected items to clarify."
     
-    with open(filename, mode="a", newline="") as f:
-        writer = csv.writer(f)
-        
-        # Write header only once
-        if not file_exists:
-            writer.writerow(["timestamp", "item_name", "quantity", "modifiers"])
-        
-        # Write each item in the order
-        for item in cart:
-            modifiers = ", ".join(item.modifiers) if item.modifiers else ""
-            writer.writerow([datetime.now().isoformat(), item.item_name, item.quantity, modifiers])
+    return {"messages": [AIMessage(content=message)]}
 
-# graph
 def makegraph():
     builder = StateGraph(State)
     builder.add_node("router", router_node)
@@ -408,6 +629,7 @@ def makegraph():
     builder.add_node("delete_order", deleteOrder)
     builder.add_node("confirm_order", confirm_order)
     builder.add_node("display_rejected", display_rejected)
+    builder.add_node("clarify_options", clarify_options_node)
     builder.add_edge(START, "router")
     builder.add_conditional_edges(
         "router",
@@ -450,46 +672,34 @@ if __name__ == "__main__":
 
     thread_id = "abc1234"
     config = {"configurable": {"thread_id": thread_id}}
-
+        
     graph.update_state(config, {
         "cart": [],
         "rejected_items": []
     })
 
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in {"quit", "exit"}:
-            print("Chatbot: Goodbye!")
-            break
-        # Add this check for confirmation:
-        if user_input.lower().strip() in {"yes", "y", "confirm"}:
-            cart = graph.get_state(config=config).values.get("cart", [])
-            if cart:
-                save_order_to_csv(cart)
-                print("Chatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
-                break
-            else:
-                print("Chatbot: Your cart was empty, no order has been placed. Goodbye.")
-                break
+    try:
+        while True:
+            user_input = input("You: ")
 
+            if user_input.lower().strip() in {"checkout", "confirm", "yes", "y"}:
+                current_cart = graph.get_state(config=config).values.get('cart', [])
+                if current_cart:
+                    insert_orders_from_bot(current_cart, mysql_conn) # Pass current_cart as order_data
+                    print("\nChatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
+                    break
+                else:
+                    print("Chatbot: Your cart is empty, nothing to save.")
+                    break
+                        
+            for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
+                for step, output in update.items():
+                    if "messages" in output:
+                        for m in output["messages"]:
+                            if isinstance(m, (AIMessage, ToolMessage)):
+                                print(f"Chatbot: {m.content}")
             
-        for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
-            for step, output in update.items():
-                if "messages" in output:
-                    for m in output["messages"]:
-                        if isinstance(m, (AIMessage, ToolMessage)):
-                            print(f"Chatbot: {m.content}")
-
-        # print(f"Your cart so far - {graph.get_state(config=config).values}")
-
-        # cp = memory.get(config)       # MemorySaver.get(thread_id)
-        # if cp is None:
-        #     print("DEBUG: checkpointer returned None (no checkpoint).")
-        # else:
-        #     # cp is a dict like {"state": {...}, "metadata": {...}}
-        #     saved_state = cp.get("state", {})
-        #     saved_msgs = saved_state.get("messages", [])
-        #     print(f"DEBUG: checkpoint saved {len(saved_msgs)} messages.")
-        #     # show last few messages and their types
-        #     for i, m in enumerate(saved_msgs[-6:], start=max(0, len(saved_msgs)-6)):
-        #         print(f"  [{i}] type={type(m)} repr={getattr(m,'content',repr(m))[:120]}")
+    finally:
+        if mysql_conn:
+            mysql_conn.close()
+            print("\nMySQL database connection closed.")

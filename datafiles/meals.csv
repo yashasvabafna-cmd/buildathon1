@@ -1,4 +1,4 @@
-meal_id,name,type,category,price,Chef_chef_id
+meal_id,item_name,type,category,price,Chef_chef_id
 1,Paneer Tikka 786,veg,Starter,679.76,103
 2,Vegetable Samosa 831,veg,Starter,219.27,102
 3,Onion Bhaji 849,veg,Starter,314.63,102
