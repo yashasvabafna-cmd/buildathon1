@@ -18,23 +18,23 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 
-from rank_bm25 import BM25Okapi
+#from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
 from langchain_community.vectorstores import FAISS 
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from promptstore import orderPrompt, conversationPrompt, routerPrompt
-from classes import Item, Order # Assuming Item and Order are defined here
+from Classes import Item, Order # Assuming Item and Order are defined here
 from utils import makeRetriever, get_context
 
 trace = True
-load_dotenv("keys.env")
-if trace:
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-    os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
-    os.environ["LANGCHAIN_PROJECT"] = "default"
+load_dotenv()
+# if trace:
+#     os.environ["TOKENIZERS_PARALLELISM"] = "false"
+#     os.environ["LANGCHAIN_TRACING_V2"] = "true"
+#     os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+#     os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
+#     os.environ["LANGCHAIN_PROJECT"] = "default"
 import mysql.connector # Import mysql.connector for database operations
 from inventory_depletion import deplete_inventory_from_order # NEW: Import depletion function
 
@@ -287,7 +287,7 @@ routerChain = routerPrompt | llm
 retriever = makeRetriever(menu, search_type="similarity", k=10)
 corpus = list(menu["item_name"])
 tcorpus = [c.lower().split() for c in corpus]
-bm_searcher = BM25Okapi(tcorpus)
+#bm_searcher = BM25Okapi(tcorpus)
 embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 vectordb = FAISS.from_texts(corpus, embedder)
 emb_thresh=0.5

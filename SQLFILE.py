@@ -79,6 +79,7 @@ def create_restaurant_tables(conn):
         print("Table 'Suppliers' created or already exists.")
 
         # Create Meals table
+        # Added 'AVAILABLE' column, default to 0 (False)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS Meals (
                 meal_id INT PRIMARY KEY,
@@ -86,7 +87,8 @@ def create_restaurant_tables(conn):
                 type VARCHAR(255),
                 category VARCHAR(255),
                 price REAL,
-                Chef_chef_id INT
+                Chef_chef_id INT,
+                AVAILABLE BOOLEAN DEFAULT TRUE # New column
             );
         ''')
         print("Table 'Meals' created or already exists.")
@@ -174,7 +176,8 @@ def insert_data_into_tables(conn):
         try:
             meals_df = pd.read_csv("meals.csv")
             meals_df.rename(columns={'item_name': 'name'}, inplace=True)
-            insert_meal_query = "INSERT INTO Meals (meal_id, name, type, category, price, Chef_chef_id) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE name=VALUES(name);"
+            # Ensure 'AVAILABLE' column is included in the insert, defaulting to True
+            insert_meal_query = "INSERT INTO Meals (meal_id, name, type, category, price, Chef_chef_id, AVAILABLE) VALUES (%s, %s, %s, %s, %s, %s, TRUE) ON DUPLICATE KEY UPDATE name=VALUES(name);"
             meal_data = [tuple(row) for row in meals_df[['meal_id', 'name', 'type', 'category', 'price', 'Chef_chef_id']].to_numpy()]
             cursor.executemany(insert_meal_query, meal_data)
             print("Inserted/Ignored data into Meals table from meals.csv.")
@@ -337,100 +340,207 @@ def insert_data_into_tables(conn):
     finally:
         cursor.close()
 
-# def deplete_inventory_from_order(order_data_items, conn):
-#     """
-#     Depletes ingredients from the Ingredients table based on the confirmed order items.
+def update_meal_availability(conn):
+    """
+    Checks the availability of ingredients for each meal and updates the 'AVAILABLE' column in the Meals table.
+    A meal is available if all its required ingredients are in stock.
+    """
+    print("\n--- Updating Meal Availability ---")
+    cursor = conn.cursor()
+    try:
+        # First, assume all meals are available
+        cursor.execute("UPDATE Meals SET AVAILABLE = TRUE")
+        conn.commit()
+
+        # Find meals that are NOT available due to insufficient ingredients
+        # Join Meals, Recipe_Ingredients, and Ingredients tables
+        # Group by meal to check all ingredients for a single meal
+        # Use HAVING to check if any ingredient has current_inventory < required_quantity
+        # Note: This query marks a meal as UNAVAILABLE if *any* required ingredient is missing/insufficient
+        unavailable_meals_query = """
+            SELECT DISTINCT m.meal_id, m.name
+            FROM Meals m
+            JOIN Recipe_Ingredients ri ON m.meal_id = ri.Meal_ID
+            JOIN Ingredients i ON ri.Ingredient_ID = i.ingredient_id
+            WHERE i.current_inventory < ri.Quantity;
+        """
+        cursor.execute(unavailable_meals_query)
+        unavailable_meals = cursor.fetchall()
+
+        if unavailable_meals:
+            print("The following meals are marked as UNAVAILABLE due to insufficient ingredients:")
+            for meal_id, meal_name in unavailable_meals:
+                print(f"  - {meal_name} (Meal ID: {meal_id})")
+                # Set AVAILABLE to FALSE for these meals
+                update_query = "UPDATE Meals SET AVAILABLE = FALSE WHERE meal_id = %s"
+                cursor.execute(update_query, (meal_id,))
+            conn.commit()
+        else:
+            print("All meals have sufficient ingredients and are marked as AVAILABLE.")
+
+    except mysql.connector.Error as err:
+        print(f"Error updating meal availability: {err}")
+        conn.rollback()
+    finally:
+        cursor.close()
+
+def check_and_order_ingredients(conn):
+    """
+    Checks if any ingredient's current inventory is below its reorder point.
+    If so, it prompts the user to order and updates the inventory if confirmed.
+    """
+    print("\n--- Checking Ingredient Reorder Points ---")
+    cursor = conn.cursor(buffered=True) # Use buffered cursor to fetch all results before updates
+    ingredients_to_order = []
+
+    try:
+        # Find ingredients below reorder point
+        reorder_query = """
+            SELECT ingredient_id, ingredient_name, current_inventory, reorder_point, reorder_quantity, unit, supplier_id
+            FROM Ingredients
+            WHERE current_inventory < reorder_point;
+        """
+        cursor.execute(reorder_query)
+        results = cursor.fetchall()
+
+        if not results:
+            print("No ingredients currently below their reorder point.")
+            return
+
+        print("The following ingredients are below their reorder point:")
+        for ingredient_id, name, current_qty, reorder_pt, reorder_qty, unit, supplier_id in results:
+            print(f"  - {name}: Current ({current_qty} {unit}), Reorder Point ({reorder_pt} {unit}), Recommend Order ({reorder_qty} {unit})")
+            ingredients_to_order.append({
+                'id': ingredient_id,
+                'name': name,
+                'current_qty': current_qty,
+                'reorder_qty': reorder_qty,
+                'unit': unit
+            })
+        
+        # --- User Interaction (simulated for an automated script) ---
+        # In a real application, you'd use a UI or interactive prompt here.
+        # For this script, we'll simulate a 'yes' to order all.
+        print("\nSimulating user confirmation to order all listed ingredients.")
+        user_confirm_order = 'yes' # Or input("Do you want to order these ingredients? (yes/no): ").lower()
+
+        if user_confirm_order == 'yes':
+            print("\n--- Placing Orders and Updating Inventory ---")
+            for item in ingredients_to_order:
+                new_inventory = item['current_qty'] + item['reorder_qty']
+                update_query = """
+                    UPDATE Ingredients
+                    SET current_inventory = %s
+                    WHERE ingredient_id = %s;
+                """
+                cursor.execute(update_query, (new_inventory, item['id']))
+                print(f"  - Ordered {item['reorder_qty']} {item['unit']} of {item['name']}. New inventory: {new_inventory} {item['unit']}")
+            conn.commit()
+            print("Inventory updated after simulated ordering.")
+        else:
+            print("No ingredients were ordered.")
+
+    except mysql.connector.Error as err:
+        print(f"Error checking/ordering ingredients: {err}")
+        conn.rollback()
+    finally:
+        cursor.close()
+
+def deplete_inventory_from_order(order_data_items, conn):
+    """
+    Depletes ingredients from the Ingredients table based on the confirmed order items.
     
-#     Args:
-#         order_data_items (list[Item]): A list of Item objects from the confirmed order.
-#         conn (mysql.connector.connection.MySQLConnection): An active MySQL database connection.
-#     """
-#     if conn is None:
-#         print("Error: MySQL connection not established. Cannot deplete inventory.")
-#         return False
+    Args:
+        order_data_items (list[Item]): A list of Item objects from the confirmed order.
+        conn (mysql.connector.connection.MySQLConnection): An active MySQL database connection.
+    """
+    if conn is None:
+        print("Error: MySQL connection not established. Cannot deplete inventory.")
+        return False
 
-#     print("\n--- Starting inventory depletion from single order ---")
-#     try:
-#         with conn.cursor() as cursor:
-#             # Step 1: Map meal names to meal_ids from the database
-#             meal_name_to_id = {}
-#             try:
-#                 cursor.execute("SELECT name, meal_id FROM Meals")
-#                 meal_name_to_id = {name.lower(): meal_id for name, meal_id in cursor.fetchall()}
-#                 print(f"DEBUG: Meal name to ID map: {meal_name_to_id}")
-#             except mysql.connector.Error as err:
-#                 print(f"Error fetching meal_id mapping: {err}")
-#                 return False
+    print("\n--- Starting inventory depletion from single order ---")
+    try:
+        with conn.cursor() as cursor:
+            # Step 1: Map meal names to meal_ids from the database
+            meal_name_to_id = {}
+            try:
+                cursor.execute("SELECT name, meal_id FROM Meals")
+                meal_name_to_id = {name.lower(): meal_id for name, meal_id in cursor.fetchall()}
+                print(f"DEBUG: Meal name to ID map: {meal_name_to_id}")
+            except mysql.connector.Error as err:
+                print(f"Error fetching meal_id mapping: {err}")
+                return False
 
-#             for order_item in order_data_items:
-#                 # --- NEW: Type check for order_item ---
-#                 if not isinstance(order_item, Item):
-#                     print(f"Error: Expected 'Item' object but received type '{type(order_item).__name__}'. Cannot process order item: {order_item}")
-#                     # This error indicates a serious issue in how the function is called.
-#                     return False # Return False to indicate failure
-#                 # --- END NEW ---
+            for order_item in order_data_items:
+                # --- NEW: Type check for order_item ---
+                if not isinstance(order_item, Item):
+                    print(f"Error: Expected 'Item' object but received type '{type(order_item).__name__}'. Cannot process order item: {order_item}")
+                    # This error indicates a serious issue in how the function is called.
+                    return False # Return False to indicate failure
+                # --- END NEW ---
 
-#                 item_name = order_item.item_name
-#                 order_quantity = order_item.quantity
-#                 meal_id = meal_name_to_id.get(item_name.lower())
-#                 print(f"\nDEBUG: Processing order for '{item_name}' (Quantity: {order_quantity})")
-#                 print(f"DEBUG: Found Meal ID: {meal_id}")
+                item_name = order_item.item_name
+                order_quantity = order_item.quantity
+                meal_id = meal_name_to_id.get(item_name.lower())
+                print(f"\nDEBUG: Processing order for '{item_name}' (Quantity: {order_quantity})")
+                print(f"DEBUG: Found Meal ID: {meal_id}")
 
-#                 if meal_id is None:
-#                     print(f"Warning: Meal '{item_name}' not found in Meals table. Cannot deplete inventory for this item.")
-#                     continue
+                if meal_id is None:
+                    print(f"Warning: Meal '{item_name}' not found in Meals table. Cannot deplete inventory for this item.")
+                    continue
 
-#                 # Step 2: Get required ingredients and quantities for the ordered meal from Recipe_Ingredients
-#                 recipe_query = """
-#                 SELECT ri.ingredient_id, ri.quantity, i.ingredient_name, i.current_inventory, i.unit AS recipe_unit
-#                 FROM Recipe_Ingredients ri
-#                 JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
-#                 WHERE ri.meal_id = %s;
-#                 """
-#                 cursor.execute(recipe_query, (meal_id,))
-#                 ingredients_for_recipe = cursor.fetchall()
-#                 print(f"DEBUG: Ingredients for recipe (Meal ID {meal_id}): {ingredients_for_recipe}")
+                # Step 2: Get required ingredients and quantities for the ordered meal from Recipe_Ingredients
+                recipe_query = """
+                SELECT ri.ingredient_id, ri.quantity, i.ingredient_name, i.current_inventory, i.unit AS recipe_unit
+                FROM Recipe_Ingredients ri
+                JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
+                WHERE ri.meal_id = %s;
+                """
+                cursor.execute(recipe_query, (meal_id,))
+                ingredients_for_recipe = cursor.fetchall()
+                print(f"DEBUG: Ingredients for recipe (Meal ID {meal_id}): {ingredients_for_recipe}")
 
 
-#                 if not ingredients_for_recipe:
-#                     print(f"Warning: No recipe ingredients found for meal '{item_name}'. Skipping inventory depletion for this item.")
-#                     continue
+                if not ingredients_for_recipe:
+                    print(f"Warning: No recipe ingredients found for meal '{item_name}'. Skipping inventory depletion for this item.")
+                    continue
 
-#                 print(f"Depleting inventory for '{item_name}' (ordered {order_quantity}x):")
-#                 for ingredient_id, recipe_quantity_per_meal, ingredient_name, current_inventory, recipe_unit in ingredients_for_recipe:
-#                     total_depletion_amount = recipe_quantity_per_meal * order_quantity
+                print(f"Depleting inventory for '{item_name}' (ordered {order_quantity}x):")
+                for ingredient_id, recipe_quantity_per_meal, ingredient_name, current_inventory, recipe_unit in ingredients_for_recipe:
+                    total_depletion_amount = recipe_quantity_per_meal * order_quantity
 
-#                     print(f"DEBUG:   Ingredient: '{ingredient_name}' (ID: {ingredient_id})")
-#                     print(f"DEBUG:     Recipe Qty per meal: {recipe_quantity_per_meal} {recipe_unit}")
-#                     print(f"DEBUG:     Current Inventory: {current_inventory} {recipe_unit}")
-#                     print(f"DEBUG:     Total Depletion Amount: {total_depletion_amount} {recipe_unit}")
+                    print(f"DEBUG:   Ingredient: '{ingredient_name}' (ID: {ingredient_id})")
+                    print(f"DEBUG:     Recipe Qty per meal: {recipe_quantity_per_meal} {recipe_unit}")
+                    print(f"DEBUG:     Current Inventory: {current_inventory} {recipe_unit}")
+                    print(f"DEBUG:     Total Depletion Amount: {total_depletion_amount} {recipe_unit}")
 
-#                     if current_inventory is None:
-#                         print(f"  - WARNING: Inventory for '{ingredient_name}' is NULL. Cannot deplete.")
-#                         continue
+                    if current_inventory is None:
+                        print(f"  - WARNING: Inventory for '{ingredient_name}' is NULL. Cannot deplete.")
+                        continue
                     
-#                     new_inventory = current_inventory - total_depletion_amount
+                    new_inventory = current_inventory - total_depletion_amount
 
-#                     # Step 3: Update the current_inventory in the Ingredients table
-#                     update_inventory_query = """
-#                     UPDATE Ingredients
-#                     SET current_inventory = %s
-#                     WHERE ingredient_id = %s;
-#                     """
-#                     cursor.execute(update_inventory_query, (new_inventory, ingredient_id))
-#                     print(f"  - Depleted {total_depletion_amount} {recipe_unit} of '{ingredient_name}'. New inventory: {new_inventory} {recipe_unit}")
+                    # Step 3: Update the current_inventory in the Ingredients table
+                    update_inventory_query = """
+                    UPDATE Ingredients
+                    SET current_inventory = %s
+                    WHERE ingredient_id = %s;
+                    """
+                    cursor.execute(update_inventory_query, (new_inventory, ingredient_id))
+                    print(f"  - Depleted {total_depletion_amount} {recipe_unit} of '{ingredient_name}'. New inventory: {new_inventory} {recipe_unit}")
             
-#             conn.commit()
-#             print("Inventory depletion completed successfully.")
-#             return True
+            conn.commit()
+            print("Inventory depletion completed successfully.")
+            return True
 
-#     except mysql.connector.Error as err:
-#         print(f"An error occurred during inventory depletion: {err}")
-#         conn.rollback() # Rollback changes if an error occurs
-#         return False
-#     except Exception as e:
-#         print(f"An unexpected error occurred during inventory depletion: {e}")
-#         return False
+    except mysql.connector.Error as err:
+        print(f"An error occurred during inventory depletion: {err}")
+        conn.rollback() # Rollback changes if an error occurs
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred during inventory depletion: {e}")
+        return False
+
 def main():
     """Main function to establish connection, create DB, create tables, and populate data."""
     # Connect to MySQL server without selecting a specific database first
@@ -460,15 +570,33 @@ def main():
         # Insert all data into the tables
         insert_data_into_tables(conn_db)
 
+        # Update meal availability based on initial inventory
+        update_meal_availability(conn_db)
+
         print(f"\nSuccessfully created and populated database '{NEW_DB_NAME}'.")
 
+        # --- Example of checking and ordering ingredients ---
+        check_and_order_ingredients(conn_db)
+
         # --- Run batch inventory depletion using actual data from 'Orders' table ---
-        print("\n--- Running batch inventory depletion using actual data from 'Orders' table ---")
-        # success = deplete_inventory_from_order(NEW_DB_NAME,conn_db) # Pass the connection to the DB
-        # if success:
-        #     print("\nBatch inventory depletion process finished successfully.")
-        # else:
-        #     print("\nBatch inventory depletion process encountered errors.")
+        print("\n--- Running dummy order inventory depletion process ---")
+        # Dummy order for testing depletion
+        dummy_order_data = [
+            Item(item_name='Paneer Tikka', quantity=1),
+            Item(item_name='Butter Chicken', quantity=2),
+            Item(item_name='Gulab Jamun', quantity=1) 
+        ]
+        success = deplete_inventory_from_order(dummy_order_data, conn_db)
+        if success:
+            print("\nDummy order inventory depletion process finished successfully.")
+        else:
+            print("\nDummy order inventory depletion process encountered errors.")
+        
+        # After depletion, update availability again
+        update_meal_availability(conn_db)
+        
+        # Check reorder points again after depletion
+        check_and_order_ingredients(conn_db)
 
     finally:
         if conn_db:
@@ -476,31 +604,4 @@ def main():
             print("\nMySQL connection to database closed.")
 
 if __name__ == '__main__':
-    # Define a simple Item class for standalone testing
-    class Item:
-        def __init__(self, item_name, quantity, modifiers=None):
-            self.item_name = item_name
-            self.quantity = quantity
-            self.modifiers = modifiers if modifiers is not None else []
-
-    dummy_order_data = [
-        Item(item_name='Paneer Tikka', quantity=1),
-        Item(item_name='Butter Chicken', quantity=2),
-        Item(item_name='Gulab Jamun', quantity=1) # An item that might not have ingredients
-    ]
-
-    # conn = get_mysql_connection()
-    # if conn:
-    #     try:
-    #         success = deplete_inventory_from_order(dummy_order_data, conn)
-    #         if success:
-    #             print("\nDummy order inventory depletion process finished successfully.")
-    #         else:
-    #             print("\nDummy order inventory depletion process encountered errors.")
-    #     finally:
-    #         if conn.is_connected():
-    #             conn.close()
-    #             print("\nMySQL connection closed.")
-    # else:
-    #     print("Could not establish database connection for inventory depletion.")
     main()
