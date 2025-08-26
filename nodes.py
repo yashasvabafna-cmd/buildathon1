@@ -17,6 +17,7 @@ def router_node(state: State, routerChain):
 def extract_order_node(state: State, orderChain, parser):
     """Extracts structured order JSON from user input."""
     messages = state["messages"]
+    cart = state["cart"]
     for m in messages[::-1]:
         if isinstance(m, HumanMessage):
             user_input = m.content
@@ -25,7 +26,8 @@ def extract_order_node(state: State, orderChain, parser):
     try:
         result = orderChain.invoke({
             "user_input": user_input,
-            "format_instructions": parser.get_format_instructions()
+            "format_instructions": parser.get_format_instructions(),
+            "cart": cart
         })
         return {"internals": [AIMessage(content=result.model_dump_json(), name="extract")], "most_recent_order": result}
     except Exception as e:
@@ -73,6 +75,94 @@ def cosine_similarity(query_emb, doc_embs):
     q = query_emb / np.linalg.norm(query_emb)
     d = doc_embs / np.linalg.norm(doc_embs, axis=1, keepdims=True)
     return np.dot(d, q)
+
+def modifyOrder(state: State, embedder, seq_thresh=0.6):
+    mro = state["most_recent_order"]
+    cart = state["cart"]
+    rej_items = []
+
+    def sequenceMatch(item_name, seq_threshold, items):
+        item_lower = item_name.lower().strip()
+        res, scores = [], []
+        for opt in items:
+            similarity = SequenceMatcher(None, item_lower, opt.lower()).ratio()
+            if similarity >= seq_threshold:
+                res.append(opt)
+                scores.append(similarity)
+        if res:
+            return {'found': True, 'items': res, 'scores': scores}
+        return {'found': False, 'items': [], 'scores': []}
+
+    for item in mro.modify:
+        cart_names = [c.item_name for c in cart]
+        if not cart_names:
+            continue
+
+        if item.item_name.lower().strip() in [c.lower() for c in cart_names]:
+            target_names = [item.item_name]
+        else:
+            seq = sequenceMatch(item.item_name, seq_thresh, cart_names)
+            query_emb = np.array(embedder.embed_query(item.item_name))
+            cart_embs = np.array(embedder.embed_documents(cart_names))
+            sims = cosine_similarity(query_emb, cart_embs)
+
+            certain_match_seq = [n for n, s in zip(seq["items"], seq["scores"]) if s >= 0.8]
+            certain_match_emb = [n for n, s in zip(cart_names, sims) if s >= 0.85]
+            certain_set = list(set(certain_match_seq + certain_match_emb))
+
+            if len(certain_set) == 1:
+                target_names = certain_set
+            elif len(certain_set) > 1:
+                print(f"Multiple matches found for '{item.item_name}':")
+                for i, opt in enumerate(certain_set, 1):
+                    print(f"{i}. {opt}")
+                try:
+                    choice = int(input("Which one would you like to modify? ")) - 1
+                    if 0 <= choice < len(certain_set):
+                        target_names = [certain_set[choice]]
+                    else:
+                        print("Invalid choice. Skipping this item.")
+                        continue
+                except ValueError:
+                    print("Invalid input. Skipping this item.")
+                    continue
+            else:
+                good_match_seq = [n for n, s in zip(seq["items"], seq["scores"]) if s >= 0.6]
+                good_match_emb = [n for n, s in zip(cart_names, sims) if s >= 0.5]
+                good_set = list(set(good_match_seq + good_match_emb))
+
+                if len(good_set) == 1:
+                    target_names = good_set
+                elif len(good_set) > 1:
+                    print(f"Possible matches for '{item.item_name}':")
+                    for i, opt in enumerate(good_set, 1):
+                        print(f"{i}. {opt}")
+                    try:
+                        choice = int(input("Which one would you like to modify? ")) - 1
+                        if 0 <= choice < len(good_set):
+                            target_names = [good_set[choice]]
+                        else:
+                            print("Invalid choice. Skipping this item.")
+                            continue
+                    except ValueError:
+                        print("Invalid input. Skipping this item.")
+                        continue
+                else:
+                    maxidx = np.argmax(sims)
+                    rej_items.append((item.item_name, cart_names[maxidx]))
+                    continue
+
+        for target in target_names:
+            for i, added_item in enumerate(cart):
+                if target.lower().strip() == added_item.item_name.lower().strip():
+                    if item.quantity:
+                        cart[i].quantity = item.quantity
+                    if item.modifiers:
+                        cart[i].modifiers.extend(item.modifiers)
+                    break
+
+    return {"cart": cart, "rejected_items": rej_items}
+
 
 def deleteOrder(state: State, embedder, seq_thresh=0.6):
     mro = state["most_recent_order"]
@@ -180,8 +270,8 @@ def processOrder(state: State, menu_searcher, bm_searcher, vectordb, emb_thresh,
     rej_items = []
         
     new_messages = []
-    print(f"mro items - {mro.items}")
-    print(f"mro delete - {mro.delete}")
+    # print(f"mro items - {mro.items}")
+    # print(f"mro delete - {mro.delete}")
     for item in mro.items:
         # pass something to internal for each of the 3 scenarios so you can make conditional edges for all 3 later.
         # print(type(mro), type(item), type(mro.model_dump_json()))
