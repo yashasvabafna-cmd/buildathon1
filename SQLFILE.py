@@ -2,7 +2,9 @@ import mysql.connector
 import pandas as pd
 import json
 import os
+import re
 from datetime import datetime
+import time 
 
 # --- IMPORTANT: Configure your MySQL connection details here ---
 DB_CONFIG = {
@@ -12,6 +14,134 @@ DB_CONFIG = {
 }
 NEW_DB_NAME = 'restaurant_new_db'
 # -------------------------------------------------------------
+
+# Unit conversion factors to a standard SI basis (grams and milliliters)
+CONVERSION_FACTORS = {
+    'kg': 1000,
+    'L': 1000,
+    'g': 1,
+    'ml': 1,
+    'piece': 25, # Assumption: average weight for a piece
+    'cup': 240,  # Assumption: average weight/volume for a cup
+    'tbsp': 15,  # Assumption: 1 tablespoon = 15 ml/g
+    'tsp': 5,    # Assumption: 1 teaspoon = 5 ml/g
+    'bunch': 100, # Assumption: average weight for a bunch
+}
+
+# Mapping of messy/repetitive names to a single, clean name
+CLEAN_NAME_MAP = {
+    'paneer': 'Paneer',
+    'g paneer': 'Paneer',
+    'cup paneer': 'Paneer',
+    'grated paneer': 'Paneer',
+    'g boneless chicken breast': 'boneless chicken',
+    'g boneless chicken': 'boneless chicken',
+    'g minced mutton or chicken': 'minced meat',
+    'g minced mutton': 'minced meat',
+    'g chicken or mutton': 'minced meat',
+    'g minced meat': 'minced meat',
+    'g firm white fish fillets': 'firm white fish',
+    'g firm fish': 'firm white fish',
+    'g prawns': 'Prawns',
+    'g okra': 'Okra',
+    'g chicken tikka pieces': 'chicken tikka pieces',
+    'g mutton': 'Mutton',
+    'g chicken': 'Chicken',
+    'ginger-garlic paste': 'ginger-garlic paste',
+    'Salt to taste': 'Salt',
+    'Cooking Oil': 'Cooking Oil',
+    'Oil for deep frying': 'Cooking Oil',
+    'Oil for shallow frying': 'Cooking Oil',
+    'oil for pan': 'Cooking Oil',
+    'tbsp vegetable oil for grilling': 'Cooking Oil',
+    'tbsp oil': 'Cooking Oil',
+    'Ghee for cooking': 'Ghee',
+    'tbsp ghee': 'Ghee',
+    'Ghee for shallow frying': 'Ghee',
+    'Melted butter for basting': 'Butter',
+    'tbsp butter': 'Butter',
+    'Melted butter for brushing': 'Butter',
+    'tsp turmeric powder': 'turmeric',
+    '1/2 tsp turmeric': 'turmeric',
+    'tsp Kashmiri red chili powder': 'Kashmiri red chili powder',
+    'tbsp red chili powder': 'red chili powder',
+    'tsp red chili powder': 'red chili powder',
+    '1/2 tsp red chili powder': 'red chili powder',
+    'tsp garam masala': 'garam masala',
+    '1/2 tsp garam masala': 'garam masala',
+    'tsp chaat masala': 'chaat masala',
+    '1/2 tsp chaat masala': 'chaat masala',
+    'tbsp lemon juice': 'lemon juice',
+    'Juice of': 'lemon juice',
+    'large onion': 'onion',
+    'large onions': 'onion',
+    'medium onion': 'onion',
+    'small onion': 'onion',
+    'large bell pepper': 'bell pepper',
+    '1/2 bell pepper': 'bell pepper',
+    'Salt and pepper to taste': 'Salt',
+    'Water as needed': 'Water',
+    'cups hot water': 'Water',
+    'Warm water to knead': 'Water',
+    'cups water or vegetable stock': 'Water',
+    'all-purpose flour': 'all-purpose flour',
+    '1/4 cup all-purpose flour': 'all-purpose flour',
+    'cups all': 'all-purpose flour',
+    'gram flour': 'gram flour',
+    'cup gram flour': 'gram flour',
+    '1/2 cup gram flour (besan)': 'gram flour',
+    '1/4 cup roasted gram flour (besan)': 'gram flour',
+    'whole wheat flour': 'whole wheat flour',
+    'cups whole wheat flour': 'whole wheat flour',
+    'cup whole wheat flour': 'whole wheat flour',
+    'ghee': 'Ghee',
+    'butter': 'Butter',
+    'Sugar': 'Sugar',
+    'tsp sugar': 'Sugar',
+    '1/2 cup yogurt': 'yogurt',
+    'yogurt': 'yogurt',
+    'thick yogurt': 'yogurt',
+    'cup thick yogurt': 'yogurt',
+    'curd': 'yogurt',
+    'cups hung curd': 'yogurt',
+    '1/4 cup yogurt': 'yogurt',
+    'cream': 'cream',
+    '1/4 cup heavy cream': 'cream',
+    'tbsp cream': 'cream',
+    'Ginger': 'ginger',
+    'inch ginger': 'ginger',
+    'tsp ginger': 'ginger',
+    'Ginger garlic paste': 'ginger-garlic paste',
+    'garlic': 'garlic',
+    'cloves garlic': 'garlic',
+    'garlic paste': 'garlic',
+    'Tomatoes': 'Tomatoes',
+    'large tomatoes': 'Tomatoes',
+    'Tomato puree': 'Tomato puree',
+    'medium potatoes': 'potatoes',
+    'large potatoes': 'potatoes',
+    'peppers': 'bell pepper',
+    'spring onion': 'spring onion',
+    'coriander leaves': 'coriander',
+    'tbsp chopped coriander leaves': 'coriander',
+    '1/4 cup chopped coriander': 'coriander',
+    'tbsp chopped coriander': 'coriander',
+    'cornflour': 'cornflour',
+    '1/4 cup cornflour': 'cornflour',
+    'tbsp cornflour': 'cornflour',
+    'red chili powder': 'red chili powder',
+    'mustard oil': 'mustard oil',
+    'tbsp mustard oil': 'mustard oil',
+    'paneer cubes': 'Paneer',
+    'chicken tikka pieces': 'chicken tikka pieces',
+    'cooked rice': 'basmati rice',
+    'basmati rice': 'basmati rice',
+    'cups basmati rice': 'basmati rice',
+    'Milk to knead': 'milk',
+    '1/2 cup warm milk': 'milk',
+    'litre full': 'milk'
+}
+
 class Item:
     def __init__(self, item_name, quantity, modifiers=None):
         self.item_name = item_name
@@ -40,328 +170,424 @@ def create_database_if_not_exists(conn, db_name):
         print(f"Database '{db_name}' created or already exists.")
         conn.commit()
     except mysql.connector.Error as err:
-        print(f"Error creating database '{db_name}': {err}")
+        print(f"Error creating database: {err}")
     finally:
         cursor.close()
 
-def drop_all_tables(conn):
-    """Drops all tables in the connected database to allow for a clean creation."""
-    cursor = conn.cursor()
+def drop_all_tables():
+    """Drops all tables in the database to ensure a clean start."""
+    conn = None
     try:
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;") # Disable foreign key checks temporarily
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for dropping tables.")
+            return
+
+        cursor = conn.cursor()
+        # Disable foreign key checks temporarily
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+        
+        # Get a list of all tables in the current database
         cursor.execute("SHOW TABLES")
         tables = [table[0] for table in cursor.fetchall()]
-        for table in tables:
-            print(f"Dropping table: {table}")
-            cursor.execute(f"DROP TABLE IF EXISTS {table}")
-        conn.commit()
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;") # Re-enable foreign key checks
-        print("All existing tables dropped successfully.")
+        if tables:
+            print("\n--- Dropping existing tables ---")
+            for table in tables:
+                cursor.execute(f"DROP TABLE IF EXISTS {table}")
+            print("All tables dropped.")
+            conn.commit()
+        else:
+            print("No existing tables to drop.")
+            
+        # Re-enable foreign key checks
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
     except mysql.connector.Error as err:
         print(f"Error dropping tables: {err}")
+        if conn: conn.rollback()
     finally:
-        cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
-def create_restaurant_tables(conn):
-    """Creates all necessary tables for the restaurant system in MySQL."""
-    cursor = conn.cursor()
+def create_restaurant_tables():
+    """Creates the necessary tables for the restaurant database."""
+    conn = None
     try:
-        # Create Suppliers table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Suppliers (
-                Supplier_ID VARCHAR(255) PRIMARY KEY,
-                Supplier_Name VARCHAR(255) NOT NULL,
-                Contact_Info TEXT,
-                Lead_Time INT,
-                Payment_Terms VARCHAR(255)
-            );
-        ''')
-        print("Table 'Suppliers' created or already exists.")
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for creating tables.")
+            return
 
-        # Create Meals table
-        # Added 'AVAILABLE' column, default to 0 (False)
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Meals (
-                meal_id INT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                type VARCHAR(255),
-                category VARCHAR(255),
-                price REAL,
-                Chef_chef_id INT,
-                AVAILABLE BOOLEAN DEFAULT TRUE # New column
-            );
-        ''')
-        print("Table 'Meals' created or already exists.")
-
-        # Create Ingredients table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Ingredients (
-                ingredient_id INT PRIMARY KEY AUTO_INCREMENT,
-                ingredient_name VARCHAR(255) NOT NULL UNIQUE,
-                unit VARCHAR(50),
-                current_inventory REAL,
-                reorder_point REAL,
-                reorder_quantity REAL,
-                supplier_id VARCHAR(255),
-                FOREIGN KEY(supplier_id) REFERENCES Suppliers(Supplier_ID)
-            );
-        ''')
-        print("Table 'Ingredients' created or already exists.")
-
-        # Updated: Create Recipes table for meal-level recipe details
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Recipes (
-                recipe_id INT PRIMARY KEY AUTO_INCREMENT,
-                meal_id INT UNIQUE, # Ensures one recipe per meal
-                meal_name VARCHAR(255) NOT NULL,
-                ingredients JSON, # Stores the raw ingredient list as JSON
-                recipe TEXT,      # Stores the preparation instructions
-                FOREIGN KEY(meal_id) REFERENCES Meals(meal_id)
-            );
-        ''')
-        print("Table 'Recipes' created or already exists.")
-
-        # New Table: Recipe_Ingredients for linking meals to individual ingredients
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS Recipe_Ingredients (
-                Recipe_Ingredient_ID INT PRIMARY KEY AUTO_INCREMENT,
-                Meal_ID INT,
-                Ingredient_ID INT,
-                Quantity REAL NOT NULL,
-                Recipe_Unit VARCHAR(50) NOT NULL,
-                FOREIGN KEY(Meal_ID) REFERENCES Meals(meal_id),
-                FOREIGN KEY(Ingredient_ID) REFERENCES Ingredients(ingredient_id)
-            );
-        ''')
-        print("Table 'Recipe_Ingredients' created or already exists.")
-
-        # Create Orders table (from your 'create-orders-table' immersive)
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Orders (
-            order_id INT PRIMARY KEY AUTO_INCREMENT,
-            meal_id INT,
-            item_name VARCHAR(255) NOT NULL,
-            quantity INT NOT NULL,
-            modifiers TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (meal_id) REFERENCES Meals(meal_id)
-        );
-        """)
-        print("Table 'Orders' created or already exists.")
-
+        cursor = conn.cursor()
+        
+        # SQL to create the tables
+        tables = {
+            'Suppliers': """
+                CREATE TABLE IF NOT EXISTS Suppliers (
+                    supplier_id VARCHAR(255) PRIMARY KEY,
+                    supplier_name VARCHAR(255),
+                    contact_info VARCHAR(255)
+                );
+            """,
+            'Ingredients': """
+                CREATE TABLE IF NOT EXISTS Ingredients (
+                    ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
+                    ingredient_name VARCHAR(255) UNIQUE NOT NULL,
+                    unit VARCHAR(50),
+                    current_inventory DOUBLE,
+                    reorder_point DOUBLE,
+                    reorder_quantity DOUBLE,
+                    supplier_id VARCHAR(255),
+                    FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
+                );
+            """,
+            'Meals': """
+                CREATE TABLE IF NOT EXISTS Meals (
+                    meal_id INT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    type VARCHAR(255),
+                    category VARCHAR(255),
+                    price REAL,
+                    Chef_chef_id INT,
+                    available BOOLEAN DEFAULT TRUE
+                );
+            """,
+            'Recipe_Ingredients': """
+                CREATE TABLE IF NOT EXISTS Recipe_Ingredients (
+                    recipe_ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
+                    Meal_ID INT,
+                    Ingredient_ID INT,
+                    Quantity DOUBLE,
+                    FOREIGN KEY (Meal_ID) REFERENCES Meals(meal_id),
+                    FOREIGN KEY (Ingredient_ID) REFERENCES Ingredients(ingredient_id),
+                    UNIQUE (Meal_ID, Ingredient_ID)
+                );
+            """,
+            'Purchase_Orders': """
+                CREATE TABLE IF NOT EXISTS Purchase_Orders (
+                    po_id INT AUTO_INCREMENT PRIMARY KEY,
+                    ingredient_id INT,
+                    ingredient_name VARCHAR(255),
+                    ordered_quantity DOUBLE,
+                    status VARCHAR(50) DEFAULT 'Placed',
+                    order_placed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    order_delivered_at TIMESTAMP NULL,
+                    FOREIGN KEY (ingredient_id) REFERENCES Ingredients(ingredient_id)
+                );
+            """,
+            'Order_Items': """
+                CREATE TABLE IF NOT EXISTS Order_Items (
+                    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+                    order_id VARCHAR(255) NOT NULL,
+                    meal_id INT,
+                    quantity INT,
+                    FOREIGN KEY (meal_id) REFERENCES Meals(meal_id)
+                );
+            """
+        }
+        
+        print("\n--- Creating Tables ---")
+        for table_name, table_sql in tables.items():
+            print(f"Creating table '{table_name}'...")
+            cursor.execute(table_sql)
+            print(f"Table '{table_name}' created.")
         conn.commit()
         print("All tables created successfully!")
     except mysql.connector.Error as err:
-        print(f"An error occurred during table creation: {err}")
+        print(f"Error creating tables: {err}")
+        if conn: conn.rollback()
     finally:
-        cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
-def insert_data_into_tables(conn):
-    """
-    Inserts data into the tables from external CSV and JSON files.
-    """
-    cursor = conn.cursor()
+def insert_data_into_tables():
+    """Populates the database tables with data from CSV and JSON files."""
+    conn = None
     try:
-        # --- Insert into Suppliers table (hardcoded for simplicity) ---
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for inserting data.")
+            return
+
+        cursor = conn.cursor()
+        # --- Insert Suppliers (Dummy Data) ---
         suppliers_data = [
-            ('Supplier001', 'City Fresh Produce', '123-456-7890', 2, 'Net 30'),
-            ('Supplier002', 'Prime Meats Co.', '987-654-3210', 3, 'Net 15'),
-            ('Supplier003', 'Spice Hub Distributors', '555-111-2222', 4, 'Net 45')
+            ('Supplier001', 'Green Groceries Inc.', 'contact1@example.com'),
+            ('Supplier002', 'Spice Route Co.', 'contact2@example.com'),
+            ('Supplier003', 'Dairy Farms Ltd.', 'contact3@example.com')
         ]
-        insert_supplier_query = "INSERT INTO Suppliers (Supplier_ID, Supplier_Name, Contact_Info, Lead_Time, Payment_Terms) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE Supplier_Name=VALUES(Supplier_Name);"
-        cursor.executemany(insert_supplier_query, suppliers_data)
-        print("Inserted/Ignored data into Suppliers table.")
-
-        # --- Insert into Meals table from meals.csv ---
+        supplier_insert_query = "INSERT INTO Suppliers (supplier_id, supplier_name, contact_info) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE supplier_name=VALUES(supplier_name);"
+        cursor.executemany(supplier_insert_query, suppliers_data)
+        
+        # --- Insert Meals from meals.csv ---
+        print("\n--- Inserting Meals from CSV ---")
         try:
-            meals_df = pd.read_csv("meals.csv")
-            meals_df.rename(columns={'item_name': 'name'}, inplace=True)
-            # Ensure 'AVAILABLE' column is included in the insert, defaulting to True
-            insert_meal_query = "INSERT INTO Meals (meal_id, name, type, category, price, Chef_chef_id, AVAILABLE) VALUES (%s, %s, %s, %s, %s, %s, TRUE) ON DUPLICATE KEY UPDATE name=VALUES(name);"
-            meal_data = [tuple(row) for row in meals_df[['meal_id', 'name', 'type', 'category', 'price', 'Chef_chef_id']].to_numpy()]
-            cursor.executemany(insert_meal_query, meal_data)
-            print("Inserted/Ignored data into Meals table from meals.csv.")
-        except FileNotFoundError:
-            print("Warning: meals.csv not found. Skipping Meals data insertion.")
-
-        # --- Insert into Ingredients table from ingredients_listcsv.csv ---
-        ingredient_name_to_id = {} # To store mapping for recipes
-        try:
-            ingredients_df = pd.read_csv("ingredients_listcsv.csv")
-            ingredients_data_tuples = []
-            for index, row in ingredients_df.iterrows():
-                ingredients_data_tuples.append((
-                    row['ingredient_name'],
-                    row['unit'],
-                    row['current_inventory'],
-                    row['reorder_level'], 
-                    row['reorder_level'] * 2, # Using reorder_level * 2 as a dummy reorder_quantity
-                    row['supplier_id']
-                ))
-
-            insert_ingredient_query = """
-            INSERT INTO Ingredients (ingredient_name, unit, current_inventory, reorder_point, reorder_quantity, supplier_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                unit=VALUES(unit), current_inventory=VALUES(current_inventory),
-                reorder_point=VALUES(reorder_point), reorder_quantity=VALUES(reorder_quantity),
-                supplier_id=VALUES(supplier_id);
+            meals_df = pd.read_csv("sqldatafiles/meals.csv")
+            insert_meal_query = """
+                INSERT INTO Meals (meal_id, name, type, category, price, Chef_chef_id, available)
+                VALUES (%s, %s, %s, %s, %s, %s, TRUE)
+                ON DUPLICATE KEY UPDATE name=VALUES(name);
             """
-            cursor.executemany(insert_ingredient_query, ingredients_data_tuples)
-            print("Inserted/Ignored data into Ingredients table from ingredients_listcsv.csv.")
-
-            # Fetch ingredient_name to ID mapping for Recipe_Ingredients table
-            cursor.execute("SELECT ingredient_name, ingredient_id FROM Ingredients")
-            ingredient_name_to_id = {k.lower(): v for k, v in cursor.fetchall()}
-
+            meal_data = [tuple(row) for row in meals_df.to_numpy()]
+            cursor.executemany(insert_meal_query, meal_data)
+            print(f"  - {cursor.rowcount} meals from CSV inserted/updated.")
         except FileNotFoundError:
-            print("Warning: ingredients_listcsv.csv not found. Skipping Ingredients data insertion.")
+            print("Warning: sqldatafiles/meals.csv not found. Skipping Meals data insertion.")
 
-        # --- Insert into Recipes and Recipe_Ingredients tables from recipes_batch_2.json ---
+        # --- Insert Ingredients from ingredients_listcsv.csv ---
+        print("\n--- Inserting Ingredients from CSV ---")
+        ingredient_name_to_id = {}
         try:
-            with open('recipes_batch_2.json', 'r') as f:
-                recipes_batch_2 = json.load(f)
-
-            recipes_to_insert_main_table = [] # For the 'Recipes' table
-            recipes_to_insert_linking_table = [] # For the 'Recipe_Ingredients' table
+            df_ingredients = pd.read_csv('sqldatafiles/ingredients_listcsv.csv')
             
-            # Realistic quantities dictionary for a more realistic approach
-            realistic_quantities = {
-                'salt': (0.01, 'kg'), 'cooking oil': (0.05, 'litres'), 'onion': (0.1, 'kg'), 'tomatoes': (0.15, 'kg'),
-                'ginger-garlic paste': (0.02, 'kg'), 'turmeric': (0.005, 'kg'), 'garam masala': (0.005, 'kg'),
-                'rice': (0.2, 'kg'), 'paneer': (0.1, 'kg'), 'chicken': (0.2, 'kg'), 'mutton': (0.2, 'kg'),
-                'whole wheat flour': (0.1, 'kg'), 'eggplant': (0.2, 'kg'), 'maida': (0.1, 'kg'),
-                'potato': (0.15, 'kg'), 'mixed vegetables': (0.2, 'kg'), 'sugar': (0.05, 'kg'),
-                'milk': (0.25, 'litres'), 'fish': (0.2, 'kg'), 'prawn': (0.2, 'kg'), 'thick yogurt': (0.1, 'kg'),
-                'lemon juice': (0.05, 'litres'), 'bell pepper': (0.1, 'kg'), 'ghee': (0.05, 'kg'),
-                'peas': (0.1, 'kg'), 'green chilies': (0.01, 'kg'), 'cauliflower': (0.2, 'kg'),
-                'cornflour': (0.05, 'kg'), 'soy sauce': (0.05, 'litres'), 'chili sauce': (0.05, 'litres'),
-                'spring onion': (0.02, 'kg'), 'ginger': (0.01, 'kg'), 'garlic': (0.01, 'kg'),
-                'curd': (0.1, 'kg'), 'chickpea flour': (0.1, 'kg'), 'whole wheat flour': (0.1, 'kg'),
-                'coriander leaves': (0.005, 'kg'), 'jaggery': (0.1, 'kg'), 'semolina': (0.1, 'kg'),
-                'black pepper': (0.005, 'kg'), 'cumin seeds': (0.005, 'kg'), 'mustard seeds': (0.005, 'kg'),
-                'mint leaves': (0.005, 'kg'), 'fresh cream': (0.1, 'litres'), 'cashew nuts': (0.05, 'kg'),
-                'butter': (0.05, 'kg'), 'basmati rice': (0.2, 'kg')
-            }
-
-            # Pre-compile common ingredient variations for better mapping
-            ingredient_variations = {
-                'paneer': 'paneer', 'yogurt': 'thick yogurt', 'ginger-garlic paste': 'ginger-garlic paste',
-                'turmeric': 'turmeric', 'red chili powder': 'kashmiri red chili powder', 'garam masala': 'garam masala',
-                'chaat masala': 'chaat masala', 'lemon juice': 'lemon juice', 'onion': 'onion',
-                'bell pepper': 'bell pepper', 'salt': 'salt', 'oil': 'cooking oil',
-                'flour': 'maida', 'ghee': 'ghee', 'potato': 'potato', 'peas': 'peas',
-                'green chilies': 'green chilies', 'cauliflower': 'cauliflower', 'cornflour': 'cornflour',
-                'soy sauce': 'soy sauce', 'chili sauce': 'chili sauce', 'spring onion': 'spring onion',
-                'tomato': 'tomatoes', 'ginger': 'ginger', 'garlic': 'garlic', 'curd': 'curd',
-                'chickpea flour': 'chickpea flour', 'whole wheat flour': 'whole wheat flour',
-                'fenugreek leaves': 'coriander leaves', 'pickle masala': 'garam masala', 'sattu': 'chickpea flour',
-                'eggplant': 'mixed vegetables', 'moong dal': 'peas', 'red lentils': 'peas',
-                'coconut milk': 'milk', 'chicken': 'chicken', 'mutton': 'mutton', 'fish': 'fish',
-                'prawn': 'prawn', 'rice': 'rice', 'basmati rice': 'basmati rice', 'milk': 'milk',
-                'sugar': 'sugar', 'semolina': 'semolina', 'jaggery': 'jaggery', 'black pepper': 'black pepper',
-                'cumin seeds': 'cumin seeds', 'mustard seeds': 'mustard seeds', 'mint leaves': 'mint leaves',
-                'fresh cream': 'fresh cream', 'cashew nuts': 'cashew nuts', 'butter': 'butter',
-                'mixed vegetables': 'mixed vegetables', 'capsicum': 'bell pepper', 'besan': 'chickpea flour',
-                'suji': 'semolina', 'coriander': 'coriander leaves', 'methi': 'coriander leaves', # Fenugreek -> Coriander for mapping
-                'mutter': 'peas', # Mutter Paneer uses Peas
-            }
-
-            unmapped_ingredients_count = 0
-            
-            for recipe_data in recipes_batch_2:
-                meal_id = recipe_data['meal_id']
-                meal_name = recipe_data['meal_name']
-                ingredients_raw_json = json.dumps(recipe_data['ingredients']) # Store as JSON string
-                recipe_instructions = recipe_data['recipe']
-                
-                # Add to main Recipes table
-                recipes_to_insert_main_table.append((meal_id, meal_name, ingredients_raw_json, recipe_instructions))
-
-                ingredients_from_json = recipe_data['ingredients']
-                for ingredient_name_raw in ingredients_from_json:
-                    ingredient_name_lower = ingredient_name_raw.lower().strip()
-                    
-                    # Apply lenient mapping for ingredient_name_clean
-                    mapped_ingredient_name = None
-                    for key, mapped_val in ingredient_variations.items():
-                        if key in ingredient_name_lower:
-                            mapped_ingredient_name = mapped_val
-                            break
-                    
-                    ingredient_id = None
-                    if mapped_ingredient_name:
-                        ingredient_id = ingredient_name_to_id.get(mapped_ingredient_name)
-
-                    if ingredient_id:
-                        # Use realistic quantities, or a default value if not found
-                        quantity, unit = realistic_quantities.get(mapped_ingredient_name, (0.01, 'units'))
-                        recipes_to_insert_linking_table.append((meal_id, ingredient_id, quantity, unit))
-                    else:
-                        unmapped_ingredients_count += 1
-                        # Uncomment the next line to debug specific unmapped ingredients
-                        # print(f"DEBUG: Could not map ingredient '{ingredient_name_raw}' (cleaned: '{ingredient_name_lower}') for meal ID {meal_id}.")
-
-            if recipes_to_insert_main_table:
-                insert_recipe_query = """
-                INSERT INTO Recipes (meal_id, meal_name, ingredients, recipe)
-                VALUES (%s, %s, %s, %s)
+            ingredient_insert_query = """
+                INSERT INTO Ingredients (ingredient_name, unit, current_inventory, reorder_point, reorder_quantity, supplier_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
-                    meal_name=VALUES(meal_name), ingredients=VALUES(ingredients), recipe=VALUES(recipe);
-                """
-                cursor.executemany(insert_recipe_query, recipes_to_insert_main_table)
-                print("Inserted/Ignored data into Recipes table from recipes_batch_2.json.")
-            else:
-                print("No main recipe data processed from recipes_batch_2.json (no meals mapped successfully).")
-
-            if recipes_to_insert_linking_table:
-                insert_linking_query = """
-                INSERT INTO Recipe_Ingredients (Meal_ID, Ingredient_ID, Quantity, Recipe_Unit)
-                VALUES (%s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    Quantity=VALUES(Quantity), Recipe_Unit=VALUES(Recipe_Unit);
-                """
-                cursor.executemany(insert_linking_query, recipes_to_insert_linking_table)
-                print("Inserted/Ignored data into Recipe_Ingredients table from recipes_batch_2.json.")
-            else:
-                print("No linking recipe data processed from recipes_batch_2.json (no ingredients mapped successfully).")
+                    unit = VALUES(unit),
+                    current_inventory = VALUES(current_inventory),
+                    reorder_point = VALUES(reorder_point),
+                    reorder_quantity = VALUES(reorder_quantity),
+                    supplier_id = VALUES(supplier_id);
+            """
+            ingredients_to_insert = [
+                (row['ingredient_name'], row['unit'], row['current_inventory'], row['reorder_level'], 
+                 row['reorder_quantity'] if 'reorder_quantity' in row else 25.0, row['supplier_id'])
+                for index, row in df_ingredients.iterrows()
+            ]
             
-            if unmapped_ingredients_count > 0:
-                print(f"Warning: {unmapped_ingredients_count} ingredients from recipes_batch_2.json could not be mapped to existing ingredients. Check console for details.")
-
+            cursor.executemany(ingredient_insert_query, ingredients_to_insert)
+            print(f"  - {cursor.rowcount} ingredients from CSV inserted/updated.")
+            
+            cursor.execute("SELECT ingredient_id, ingredient_name FROM Ingredients")
+            ingredient_name_to_id = {name.lower(): id for id, name in cursor.fetchall()}
         except FileNotFoundError:
-            print("Warning: recipes_batch_2.json not found. Skipping Recipes data insertion.")
-        except json.JSONDecodeError:
-            print("Error: recipes_batch_2.json is not a valid JSON file. Skipping Recipes data insertion.")
+            print("Warning: sqldatafiles/ingredients_listcsv.csv not found. Skipping Ingredients data insertion.")
+
+        # --- Insert Meals and Recipe Ingredients from JSON ---
+        print("\n--- Inserting Recipes from JSON ---")
+        try:
+            with open('sqldatafiles/recipes_batch_2.json', 'r') as f:
+                recipes_data = json.load(f)
+
+            unmapped_count = 0
+            for recipe in recipes_data:
+                # Get the meal_id for the current recipe from the Meals table
+                cursor.execute("SELECT meal_id FROM Meals WHERE name = %s", (recipe['meal_name'],))
+                meal_id = cursor.fetchone()
+                if not meal_id:
+                    print(f"  - Skipping recipe for '{recipe['meal_name']}' as meal was not found in meals.csv.")
+                    continue
+                meal_id = meal_id[0]
+
+                # Now, handle Recipe_Ingredients
+                for ingredient_str in recipe['ingredients']:
+                    # Improved parsing logic
+                    match = re.search(r'^\s*([\d.]+)?\s*([a-zA-Z\s,]+)', ingredient_str)
+                    
+                    if match:
+                        quantity_str = match.group(1)
+                        quantity = float(quantity_str) if quantity_str else 0.0
+                        ingredient_name_raw = match.group(2).strip()
+                        ingredient_name = ingredient_name_raw.split(',')[0].strip()
+                    else:
+                        quantity = 0.0
+                        ingredient_name = ingredient_str.split(',')[0].strip()
+
+                    ing_id = ingredient_name_to_id.get(ingredient_name.lower())
+
+                    if not ing_id:
+                        unmapped_count += 1
+                        insert_unmapped_query = """
+                            INSERT INTO Ingredients (ingredient_name, unit, current_inventory, reorder_point, reorder_quantity, supplier_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            ON DUPLICATE KEY UPDATE ingredient_name = ingredient_name;
+                        """
+                        cursor.execute(insert_unmapped_query, (ingredient_name, 'piece', 0.0, 1.0, 25.0, 'Supplier001'))
+                        ing_id = cursor.lastrowid
+                        ingredient_name_to_id[ingredient_name.lower()] = ing_id
+
+                    # Ensure quantity is capped at 20.0
+                    capped_quantity = min(quantity, 20.0)
+
+                    recipe_ing_insert_query = """
+                        INSERT INTO Recipe_Ingredients (Meal_ID, Ingredient_ID, Quantity)
+                        VALUES (%s, %s, %s)
+                        ON DUPLICATE KEY UPDATE Quantity = VALUES(Quantity);
+                    """
+                    cursor.execute(recipe_ing_insert_query, (meal_id, ing_id, capped_quantity))
+
+            print(f"  - {unmapped_count} ingredients were newly added to the main inventory.")
+        except FileNotFoundError:
+            print("Warning: sqldatafiles/recipes_batch_2.json not found. Skipping recipe data insertion.")
 
         conn.commit()
+        print("All data inserted successfully!")
     except mysql.connector.Error as err:
-        print(f"An error occurred during data insertion: {err}")
+        print(f"Error inserting data: {err}")
+        if conn: conn.rollback()
     finally:
-        cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
-def update_meal_availability(conn):
+def clean_and_standardize_ingredients():
     """
-    Checks the availability of ingredients for each meal and updates the 'AVAILABLE' column in the Meals table.
-    A meal is available if all its required ingredients are in stock.
+    Standardizes ingredient units and consolidates duplicate ingredients into a single entry.
     """
-    print("\n--- Updating Meal Availability ---")
-    cursor = conn.cursor()
+    conn = None
     try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for cleaning ingredients.")
+            return
+
+        cursor = conn.cursor(dictionary=True)
+        print("\n--- Cleaning and Standardizing Ingredients ---")
+
+        cursor.execute("SELECT ingredient_id, ingredient_name, unit, current_inventory, reorder_point, reorder_quantity FROM Ingredients")
+        ingredients = cursor.fetchall()
+        
+        # A map to hold consolidated ingredient data: clean_name -> {id, inventory, ...}
+        consolidated_ingredients = {}
+
+        for ing in ingredients:
+            original_name = ing['ingredient_name']
+            clean_name = CLEAN_NAME_MAP.get(original_name.lower(), original_name)
+            
+            # Get the conversion factor, defaulting to 1 if not found
+            conversion_factor = CONVERSION_FACTORS.get(ing['unit'].lower(), 1)
+            
+            # Convert quantities to a standard unit (grams or ml)
+            ing['current_inventory'] *= conversion_factor
+            ing['reorder_point'] *= conversion_factor
+            ing['reorder_quantity'] *= conversion_factor
+            ing['unit'] = 'g' if ing['unit'] in ['kg', 'g', 'piece', 'cup', 'tbsp', 'tsp', 'bunch'] else 'ml'
+
+            if clean_name not in consolidated_ingredients:
+                consolidated_ingredients[clean_name] = {
+                    'primary_id': ing['ingredient_id'],
+                    'inventory': ing['current_inventory'],
+                    'reorder_point': ing['reorder_point'],
+                    'reorder_quantity': ing['reorder_quantity'],
+                    'unit': ing['unit']
+                }
+            else:
+                # Add to existing consolidated entry
+                consolidated_ingredients[clean_name]['inventory'] += ing['current_inventory']
+                # Take the max reorder point/quantity to be safe
+                consolidated_ingredients[clean_name]['reorder_point'] = max(consolidated_ingredients[clean_name]['reorder_point'], ing['reorder_point'])
+                consolidated_ingredients[clean_name]['reorder_quantity'] = max(consolidated_ingredients[clean_name]['reorder_quantity'], ing['reorder_quantity'])
+
+        # Update the main ingredient table and delete duplicates
+        ingredients_to_delete = []
+        for ing in ingredients:
+            original_name = ing['ingredient_name']
+            clean_name = CLEAN_NAME_MAP.get(original_name.lower(), original_name)
+            
+            if clean_name != original_name or ing['unit'] not in ['g', 'ml']:
+                # This is a duplicate or needs updating
+                if ing['ingredient_id'] != consolidated_ingredients[clean_name]['primary_id']:
+                    ingredients_to_delete.append(ing['ingredient_id'])
+                    # Update Recipe_Ingredients to point to the new primary ID
+                    cursor.execute("UPDATE Recipe_Ingredients SET Ingredient_ID = %s WHERE Ingredient_ID = %s", (consolidated_ingredients[clean_name]['primary_id'], ing['ingredient_id']))
+
+        # Delete old duplicates
+        if ingredients_to_delete:
+            delete_query = "DELETE FROM Ingredients WHERE ingredient_id IN ({})".format(','.join(['%s'] * len(ingredients_to_delete)))
+            cursor.execute(delete_query, ingredients_to_delete)
+        
+        # Update the primary ingredient entries with consolidated values
+        for clean_name, data in consolidated_ingredients.items():
+            update_query = """
+                UPDATE Ingredients
+                SET ingredient_name = %s, unit = %s, current_inventory = %s, reorder_point = %s, reorder_quantity = %s
+                WHERE ingredient_id = %s
+            """
+            cursor.execute(update_query, (
+                clean_name,
+                data['unit'],
+                data['inventory'],
+                data['reorder_point'],
+                data['reorder_quantity'],
+                data['primary_id']
+            ))
+
+        conn.commit()
+        print("  - Ingredients table has been standardized and duplicates removed.")
+
+    except mysql.connector.Error as err:
+        print(f"Error during ingredient cleaning: {err}")
+        if conn: conn.rollback()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def set_reorder_point_from_recipes():
+    """
+    Sets the reorder point for each ingredient based on the maximum quantity required
+    by any recipe that uses it.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for setting reorder points from recipes.")
+            return
+
+        print("\n--- Setting Reorder Points Based on Recipes ---")
+        cursor = conn.cursor()
+
+        # Find the maximum quantity required for each ingredient
+        max_qty_query = """
+            SELECT Ingredient_ID, MAX(Quantity)
+            FROM Recipe_Ingredients
+            GROUP BY Ingredient_ID;
+        """
+        cursor.execute(max_qty_query)
+        max_quantities = cursor.fetchall()
+
+        if max_quantities:
+            for ing_id, max_qty in max_quantities:
+                # Update the reorder_point to be the max quantity required, ensuring it's not greater than the existing reorder point
+                update_query = """
+                    UPDATE Ingredients
+                    SET reorder_point = GREATEST(%s, reorder_point)
+                    WHERE ingredient_id = %s;
+                """
+                cursor.execute(update_query, (max_qty, ing_id))
+            conn.commit()
+            print("  - Reorder points updated to be at least the maximum quantity required by any recipe.")
+    except mysql.connector.Error as err:
+        print(f"Error setting reorder points: {err}")
+        if conn: conn.rollback()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def update_meal_availability():
+    """
+    Updates the 'available' status of meals based on ingredient inventory.
+    This function now manages its own database connection.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Error: Could not establish database connection for updating meal availability.")
+            return
+
+        print("\n--- Updating Meal Availability ---")
+        cursor = conn.cursor()
+        
         # First, assume all meals are available
-        cursor.execute("UPDATE Meals SET AVAILABLE = TRUE")
+        cursor.execute("UPDATE Meals SET available = TRUE")
         conn.commit()
 
         # Find meals that are NOT available due to insufficient ingredients
-        # Join Meals, Recipe_Ingredients, and Ingredients tables
-        # Group by meal to check all ingredients for a single meal
-        # Use HAVING to check if any ingredient has current_inventory < required_quantity
-        # Note: This query marks a meal as UNAVAILABLE if *any* required ingredient is missing/insufficient
         unavailable_meals_query = """
             SELECT DISTINCT m.meal_id, m.name
             FROM Meals m
             JOIN Recipe_Ingredients ri ON m.meal_id = ri.Meal_ID
-            JOIN Ingredients i ON ri.Ingredient_ID = i.ingredient_id
+            JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
             WHERE i.current_inventory < ri.Quantity;
         """
         cursor.execute(unavailable_meals_query)
@@ -372,7 +598,7 @@ def update_meal_availability(conn):
             for meal_id, meal_name in unavailable_meals:
                 print(f"  - {meal_name} (Meal ID: {meal_id})")
                 # Set AVAILABLE to FALSE for these meals
-                update_query = "UPDATE Meals SET AVAILABLE = FALSE WHERE meal_id = %s"
+                update_query = "UPDATE Meals SET available = FALSE WHERE meal_id = %s"
                 cursor.execute(update_query, (meal_id,))
             conn.commit()
         else:
@@ -380,228 +606,299 @@ def update_meal_availability(conn):
 
     except mysql.connector.Error as err:
         print(f"Error updating meal availability: {err}")
-        conn.rollback()
+        if conn: conn.rollback()
+    except Exception as e:
+        print(f"An unexpected error occurred during update_meal_availability: {e}")
+        if conn: conn.rollback()
     finally:
-        cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
-def check_and_order_ingredients(conn):
+def set_initial_inventory():
     """
-    Checks if any ingredient's current inventory is below its reorder point.
-    If so, it prompts the user to order and updates the inventory if confirmed.
+    Sets a reasonable starting inventory value for ingredients if their initial value is zero
+    or below their reorder point, ensuring they are initially well-stocked.
+    This function now manages its own database connection.
     """
-    print("\n--- Checking Ingredient Reorder Points ---")
-    cursor = conn.cursor(buffered=True) # Use buffered cursor to fetch all results before updates
-    ingredients_to_order = []
-
+    conn = None
     try:
-        # Find ingredients below reorder point
-        reorder_query = """
-            SELECT ingredient_id, ingredient_name, current_inventory, reorder_point, reorder_quantity, unit, supplier_id
-            FROM Ingredients
-            WHERE current_inventory < reorder_point;
-        """
-        cursor.execute(reorder_query)
-        results = cursor.fetchall()
-
-        if not results:
-            print("No ingredients currently below their reorder point.")
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for setting initial inventory.")
             return
 
-        print("The following ingredients are below their reorder point:")
-        for ingredient_id, name, current_qty, reorder_pt, reorder_qty, unit, supplier_id in results:
-            print(f"  - {name}: Current ({current_qty} {unit}), Reorder Point ({reorder_pt} {unit}), Recommend Order ({reorder_qty} {unit})")
-            ingredients_to_order.append({
-                'id': ingredient_id,
-                'name': name,
-                'current_qty': current_qty,
-                'reorder_qty': reorder_qty,
-                'unit': unit
-            })
-        
-        # --- User Interaction (simulated for an automated script) ---
-        # In a real application, you'd use a UI or interactive prompt here.
-        # For this script, we'll simulate a 'yes' to order all.
-        print("\nSimulating user confirmation to order all listed ingredients.")
-        user_confirm_order = 'yes' # Or input("Do you want to order these ingredients? (yes/no): ").lower()
+        print("\n--- Setting Initial Inventory ---")
+        cursor = conn.cursor()
 
-        if user_confirm_order == 'yes':
-            print("\n--- Placing Orders and Updating Inventory ---")
-            for item in ingredients_to_order:
-                new_inventory = item['current_qty'] + item['reorder_qty']
-                update_query = """
-                    UPDATE Ingredients
-                    SET current_inventory = %s
-                    WHERE ingredient_id = %s;
-                """
-                cursor.execute(update_query, (new_inventory, item['id']))
-                print(f"  - Ordered {item['reorder_qty']} {item['unit']} of {item['name']}. New inventory: {new_inventory} {item['unit']}")
-            conn.commit()
-            print("Inventory updated after simulated ordering.")
+        # Update ingredients that are at or below their reorder point or have zero/null inventory
+        update_query = """
+            UPDATE Ingredients
+            SET current_inventory = reorder_point + reorder_quantity -- Bring it above reorder point
+            WHERE current_inventory <= reorder_point OR current_inventory IS NULL OR current_inventory <= 0.0;
+        """
+        cursor.execute(update_query)
+        conn.commit()
+        print(f"  - Updated {cursor.rowcount} ingredient inventories to ensure sufficient stock initially.")
+    except Exception as err:
+        print(f"Error setting initial inventory: {err}")
+        if conn: conn.rollback()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def find_missing_ingredients_for_meal(meal_name):
+    """
+    Finds and returns a list of ingredients for a given meal that are below the required quantity.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print(f"  - Could not establish connection to check ingredients for '{meal_name}'.")
+            return []
+
+        cursor = conn.cursor()
+        query = """
+            SELECT i.ingredient_name, i.current_inventory, ri.Quantity
+            FROM Meals m
+            JOIN Recipe_Ingredients ri ON m.meal_id = ri.Meal_ID
+            JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
+            WHERE m.name = %s AND i.current_inventory < ri.Quantity;
+        """
+        cursor.execute(query, (meal_name,))
+        return cursor.fetchall()
+    except mysql.connector.Error as err:
+        print(f"Error checking ingredients for {meal_name}: {err}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def debug_availability_issue():
+    """
+    Prints a detailed debug report for meals that are marked as unavailable.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Error: Could not connect for debugging.")
+            return
+
+        print("\n--- Debugging Meal Availability Issues ---")
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM Meals WHERE available = FALSE;")
+        unavailable_meals = [row[0] for row in cursor.fetchall()]
+
+        if unavailable_meals:
+            print("The following meals are still marked as unavailable. Here's why:")
+            for meal_name in unavailable_meals:
+                missing_ingredients = find_missing_ingredients_for_meal(meal_name)
+                if missing_ingredients:
+                    print(f"  - '{meal_name}' is unavailable because:")
+                    for ing_name, current_inv, required_qty in missing_ingredients:
+                        print(f"    - '{ing_name}' has {current_inv} but requires {required_qty}.")
         else:
-            print("No ingredients were ordered.")
+            print("All meals appear to have sufficient ingredients.")
+    except Exception as e:
+        print(f"An error occurred during debugging: {e}")
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
 
+def check_and_order_ingredients():
+    """
+    Checks for ingredients that have fallen below their reorder point and simulates
+    a purchase order to replenish stock.
+    This function now manages its own database connection.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for checking and ordering ingredients.")
+            return
+
+        cursor = conn.cursor()
+        print("\n--- Checking and Ordering Ingredients ---")
+
+        # Find ingredients below reorder point
+        reorder_query = """
+            SELECT ingredient_id, ingredient_name, reorder_quantity, supplier_id, current_inventory
+            FROM Ingredients
+            WHERE current_inventory < reorder_point AND reorder_point > 0;
+        """
+        cursor.execute(reorder_query)
+        to_order = cursor.fetchall()
+
+        if to_order:
+            for ing_id, ing_name, qty, supp_id, current_inv in to_order:
+                print(f"  - Placing order for {qty} of '{ing_name}' from supplier '{supp_id}'.")
+                
+                # Insert a new purchase order
+                po_insert_query = """
+                    INSERT INTO Purchase_Orders (ingredient_id, ingredient_name, ordered_quantity, status)
+                    VALUES (%s, %s, %s, 'Placed');
+                """
+                cursor.execute(po_insert_query, (ing_id, ing_name, qty))
+                po_id = cursor.lastrowid
+                conn.commit()
+
+                # Simulate delivery time
+                print("  - Simulating a 10-second delivery delay...")
+                time.sleep(10) # Simulating a delay of 10 seconds
+                
+                # Update inventory and order status to 'Delivered'
+                update_status_query = "UPDATE Purchase_Orders SET status = 'Delivered', order_delivered_at = NOW() WHERE po_id = %s;"
+                cursor.execute(update_status_query, (po_id,))
+                
+                update_inventory_query = "UPDATE Ingredients SET current_inventory = current_inventory + %s WHERE ingredient_id = %s;"
+                cursor.execute(update_inventory_query, (qty, ing_id))
+                
+                conn.commit()
+        else:
+            print("  - No ingredients need to be reordered.")
     except mysql.connector.Error as err:
         print(f"Error checking/ordering ingredients: {err}")
-        conn.rollback()
+        if conn: conn.rollback()
+    except Exception as e:
+        print(f"An unexpected error occurred during check_and_order_ingredients: {e}")
+        if conn: conn.rollback()
     finally:
-        cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
 
-def deplete_inventory_from_order(order_data_items, conn):
+def deplete_inventory_from_order(order_data_items):
     """
-    Depletes ingredients from the Ingredients table based on the confirmed order items.
-    
-    Args:
-        order_data_items (list[Item]): A list of Item objects from the confirmed order.
-        conn (mysql.connector.connection.MySQLConnection): An active MySQL database connection.
+    Simulates a customer order and depletes inventory for the meals ordered.
+    This function now manages its own database connection.
     """
-    if conn is None:
-        print("Error: MySQL connection not established. Cannot deplete inventory.")
-        return False
-
-    print("\n--- Starting inventory depletion from single order ---")
+    conn = None
     try:
-        with conn.cursor() as cursor:
-            # Step 1: Map meal names to meal_ids from the database
-            meal_name_to_id = {}
-            try:
-                cursor.execute("SELECT name, meal_id FROM Meals")
-                meal_name_to_id = {name.lower(): meal_id for name, meal_id in cursor.fetchall()}
-                print(f"DEBUG: Meal name to ID map: {meal_name_to_id}")
-            except mysql.connector.Error as err:
-                print(f"Error fetching meal_id mapping: {err}")
-                return False
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Error: MySQL connection not established. Cannot deplete inventory.")
+            return False
 
-            for order_item in order_data_items:
-                # --- NEW: Type check for order_item ---
-                if not isinstance(order_item, Item):
-                    print(f"Error: Expected 'Item' object but received type '{type(order_item).__name__}'. Cannot process order item: {order_item}")
-                    # This error indicates a serious issue in how the function is called.
-                    return False # Return False to indicate failure
-                # --- END NEW ---
+        print("\n--- Depleting Inventory for Customer Order ---")
+        cursor = conn.cursor()
+        
+        # A dictionary to sum up total ingredient usage for this order
+        ingredient_usage = {}
+        for item in order_data_items:
+            # Get meal ID
+            cursor.execute("SELECT meal_id FROM Meals WHERE name = %s", (item.item_name,))
+            meal_id = cursor.fetchone()
+            if meal_id:
+                meal_id = meal_id[0]
+                # Get all ingredients for this meal
+                cursor.execute("SELECT Ingredient_ID, Quantity FROM Recipe_Ingredients WHERE Meal_ID = %s", (meal_id,))
+                recipe_ingredients = cursor.fetchall()
+                for ing_id, quantity in recipe_ingredients:
+                    if ing_id in ingredient_usage:
+                        ingredient_usage[ing_id] += quantity * item.quantity
+                    else:
+                        ingredient_usage[ing_id] = quantity * item.quantity
+        
+        if not ingredient_usage:
+            print("  - No meals were found in the order to deplete inventory.")
+            return True # No depletion, but not an error
 
-                item_name = order_item.item_name
-                order_quantity = order_item.quantity
-                meal_id = meal_name_to_id.get(item_name.lower())
-                print(f"\nDEBUG: Processing order for '{item_name}' (Quantity: {order_quantity})")
-                print(f"DEBUG: Found Meal ID: {meal_id}")
-
-                if meal_id is None:
-                    print(f"Warning: Meal '{item_name}' not found in Meals table. Cannot deplete inventory for this item.")
-                    continue
-
-                # Step 2: Get required ingredients and quantities for the ordered meal from Recipe_Ingredients
-                recipe_query = """
-                SELECT ri.ingredient_id, ri.quantity, i.ingredient_name, i.current_inventory, i.unit AS recipe_unit
-                FROM Recipe_Ingredients ri
-                JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
-                WHERE ri.meal_id = %s;
-                """
-                cursor.execute(recipe_query, (meal_id,))
-                ingredients_for_recipe = cursor.fetchall()
-                print(f"DEBUG: Ingredients for recipe (Meal ID {meal_id}): {ingredients_for_recipe}")
-
-
-                if not ingredients_for_recipe:
-                    print(f"Warning: No recipe ingredients found for meal '{item_name}'. Skipping inventory depletion for this item.")
-                    continue
-
-                print(f"Depleting inventory for '{item_name}' (ordered {order_quantity}x):")
-                for ingredient_id, recipe_quantity_per_meal, ingredient_name, current_inventory, recipe_unit in ingredients_for_recipe:
-                    total_depletion_amount = recipe_quantity_per_meal * order_quantity
-
-                    print(f"DEBUG:   Ingredient: '{ingredient_name}' (ID: {ingredient_id})")
-                    print(f"DEBUG:     Recipe Qty per meal: {recipe_quantity_per_meal} {recipe_unit}")
-                    print(f"DEBUG:     Current Inventory: {current_inventory} {recipe_unit}")
-                    print(f"DEBUG:     Total Depletion Amount: {total_depletion_amount} {recipe_unit}")
-
-                    if current_inventory is None:
-                        print(f"  - WARNING: Inventory for '{ingredient_name}' is NULL. Cannot deplete.")
-                        continue
-                    
-                    new_inventory = current_inventory - total_depletion_amount
-
-                    # Step 3: Update the current_inventory in the Ingredients table
-                    update_inventory_query = """
-                    UPDATE Ingredients
-                    SET current_inventory = %s
-                    WHERE ingredient_id = %s;
-                    """
-                    cursor.execute(update_inventory_query, (new_inventory, ingredient_id))
-                    print(f"  - Depleted {total_depletion_amount} {recipe_unit} of '{ingredient_name}'. New inventory: {new_inventory} {recipe_unit}")
-            
-            conn.commit()
-            print("Inventory depletion completed successfully.")
-            return True
+        # Update inventory based on total usage
+        for ing_id, used_qty in ingredient_usage.items():
+            update_query = "UPDATE Ingredients SET current_inventory = GREATEST(0, current_inventory - %s) WHERE ingredient_id = %s;"
+            cursor.execute(update_query, (used_qty, ing_id))
+        
+        conn.commit()
+        print("  - Inventory successfully depleted for the order.")
+        return True
 
     except mysql.connector.Error as err:
-        print(f"An error occurred during inventory depletion: {err}")
-        conn.rollback() # Rollback changes if an error occurs
+        print(f"Error depleting inventory: {err}")
+        if conn: conn.rollback()
         return False
     except Exception as e:
-        print(f"An unexpected error occurred during inventory depletion: {e}")
+        print(f"An unexpected error occurred during deplete_inventory_from_order: {e}")
+        if conn: conn.rollback()
         return False
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
+def verify_purchase_orders():
+    """
+    Verifies that purchase orders were created and shows the most recent ones.
+    This function now manages its own database connection.
+    """
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Failed to get connection for verifying purchase orders.")
+            return
+
+        cursor = conn.cursor()
+        print("\n--- Verifying Purchase Orders ---")
+        cursor.execute("SELECT po_id, ingredient_name, ordered_quantity, status, order_placed_at, order_delivered_at FROM Purchase_Orders ORDER BY order_placed_at DESC LIMIT 5")
+        po_results = cursor.fetchall()
+        if po_results:
+            print("Recent Purchase Orders:")
+            for po_id, ing_name, qty, status, placed_at, delivered_at in po_results:
+                print(f"  PO ID: {po_id}, Ingredient: {ing_name}, Quantity: {qty}, Status: {status}, Placed: {placed_at}, Delivered: {delivered_at}")
+        else:
+            print("  - No purchase orders found.")
+    except mysql.connector.Error as err:
+        print(f"Error during Purchase Order verification: {err}")
+        if conn: conn.rollback()
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
 
 def main():
     """Main function to establish connection, create DB, create tables, and populate data."""
-    # Connect to MySQL server without selecting a specific database first
     conn_server = get_mysql_connection(database_name=None)
     if not conn_server:
         return
 
     try:
-        # Create the new database if it doesn't exist
         create_database_if_not_exists(conn_server, NEW_DB_NAME)
     finally:
-        if conn_server:
+        if conn_server and conn_server.is_connected():
             conn_server.close()
 
-    # Now connect to the newly created/existing database
-    conn_db = get_mysql_connection(database_name=NEW_DB_NAME)
-    if not conn_db:
-        return
+    # No need to pass conn_db around; each function will get its own connection.
+    drop_all_tables()
+    create_restaurant_tables()
+    insert_data_into_tables()
+    
+    # This is the new, crucial step
+    clean_and_standardize_ingredients()
+    set_reorder_point_from_recipes()
+    
+    set_initial_inventory() # This now intelligently brings stock above reorder point
+    update_meal_availability() # This will reflect initial stock
 
-    try:
-        # Drop all tables in the specific database for a clean start
-        drop_all_tables(conn_db)
+    print(f"\nSuccessfully created and populated database '{NEW_DB_NAME}'.")
 
-        # Create all necessary tables
-        create_restaurant_tables(conn_db)
+    print("\n--- Simulating a customer order ---")
+    customer_order = [
+        Item('Paneer Tikka', 1),
+        Item('Butter Chicken', 1),
+        Item('Gulab Jamun', 1)
+    ]
+    deplete_inventory_from_order(customer_order)
+    
+    update_meal_availability() # Reflect depletion
 
-        # Insert all data into the tables
-        insert_data_into_tables(conn_db)
+    check_and_order_ingredients() # Should now correctly detect and order
 
-        # Update meal availability based on initial inventory
-        update_meal_availability(conn_db)
+    verify_purchase_orders() # Verify the orders placed
 
-        print(f"\nSuccessfully created and populated database '{NEW_DB_NAME}'.")
-
-        # --- Example of checking and ordering ingredients ---
-        check_and_order_ingredients(conn_db)
-
-        # --- Run batch inventory depletion using actual data from 'Orders' table ---
-        print("\n--- Running dummy order inventory depletion process ---")
-        # Dummy order for testing depletion
-        dummy_order_data = [
-            Item(item_name='Paneer Tikka', quantity=1),
-            Item(item_name='Butter Chicken', quantity=2),
-            Item(item_name='Gulab Jamun', quantity=1) 
-        ]
-        success = deplete_inventory_from_order(dummy_order_data, conn_db)
-        if success:
-            print("\nDummy order inventory depletion process finished successfully.")
-        else:
-            print("\nDummy order inventory depletion process encountered errors.")
-        
-        # After depletion, update availability again
-        update_meal_availability(conn_db)
-        
-        # Check reorder points again after depletion
-        check_and_order_ingredients(conn_db)
-
-    finally:
-        if conn_db:
-            conn_db.close()
-            print("\nMySQL connection to database closed.")
-
+    # After ordering and delivery, update availability again to reflect new stock
+    update_meal_availability()
+    
+    # Run the debugger to identify which ingredients are still missing
+    debug_availability_issue()
+    
 if __name__ == '__main__':
     main()

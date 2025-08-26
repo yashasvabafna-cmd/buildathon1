@@ -46,7 +46,7 @@ warnings.filterwarnings("ignore")
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',        # Your MySQL username
-    'password': '1234', # Your MySQL password
+    'password': '12345678', # Your MySQL password
     'database': 'restaurant_new_db' # The database where 'Orders' table is
 }
 # ----------------------------------------------------
@@ -64,7 +64,7 @@ if mysql_conn is None:
     print("FATAL: Database connection failed. Bot will not be able to save orders or deplete inventory.")
 
 parser = PydanticOutputParser(pydantic_object=Order)
-menu = pd.read_csv("meals.csv")
+menu = pd.read_csv("datafiles/meals.csv")
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -474,7 +474,7 @@ def processOrder(state: State):
     for item in mro.items:
         # pass something to internal for each of the 3 scenarios so you can make conditional edges for all 3 later.
         # print(type(mro), type(item), type(mro.model_dump_json()))
-        result = menu_searcher.unify(item.item_name, bm_searcher=bm_searcher, vectordb=vectordb, emb_thresh=emb_thresh, seq_thresh=seq_thresh)
+        result = menu_searcher.unify(item.item_name, vectordb=vectordb, emb_thresh=emb_thresh, seq_thresh=seq_thresh)
         
         if result.get('exact', False):
             # Exact match
