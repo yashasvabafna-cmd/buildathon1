@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 import mysql.connector
-from inventory_depletion import deplete_inventory_from_order
+import time
 
 # --- Helper function to get current inventory for debugging ---
 def get_ingredient_current_inventory(ingredient_id, conn):
@@ -20,9 +20,9 @@ def get_ingredient_current_inventory(ingredient_id, conn):
         print(f"Error fetching inventory for ingredient ID {ingredient_id}: {err}")
         return None
 
-def insert_orders_from_bot(order_data, conn):
+def insert_orders_from_bot(order_data, conn, deplete_inventory_from_order):
     """
-    Saves order data from the bot's 'cart' list directly to the MySQL 'Orders' table.
+    Saves order data from the bot's 'cart' list directly to the MySQL 'Order_Items' table.
     Then triggers inventory depletion and prints before/after inventory levels.
     """
     if conn is None:
@@ -40,27 +40,28 @@ def insert_orders_from_bot(order_data, conn):
                 return
 
             orders_to_insert = []
+            order_id = f"ORDER_{datetime.now().strftime('%Y%m%d%H%M%S%f')}" # Generate a unique order_id
+            
             for item in order_data:
                 item_name = item.item_name
                 quantity = item.quantity
-                modifiers = json.dumps(item.modifiers) if item.modifiers else None
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+                
                 meal_id = meal_name_to_id.get(item_name.lower())
                 
                 if meal_id is not None:
-                    orders_to_insert.append((meal_id, item_name, quantity, modifiers, timestamp))
+                    # Append the unique order_id, meal_id, and quantity to the list
+                    orders_to_insert.append((order_id, meal_id, quantity))
                 else:
                     print(f"Warning: Meal '{item_name}' not found in database. Skipping this order item.")
             
             if orders_to_insert:
                 insert_query = """
-                INSERT INTO Orders (meal_id, item_name, quantity, modifiers, timestamp)
-                VALUES (%s, %s, %s, %s, %s);
+                INSERT INTO Order_Items (order_id, meal_id, quantity)
+                VALUES (%s, %s, %s);
                 """
                 cursor.executemany(insert_query, orders_to_insert)
                 conn.commit()
-                print(f"\nSuccessfully saved {len(orders_to_insert)} order items to the 'Orders' table.")
+                print(f"\nSuccessfully saved {len(orders_to_insert)} order items for Order ID: {order_id}.")
                 
                 # --- Pre-depletion Inventory Check ---
                 print("\n--- Pre-depletion Inventory Check ---")
@@ -93,7 +94,7 @@ def insert_orders_from_bot(order_data, conn):
 
                 # --- Call inventory depletion from the separate module ---
                 # The deplete_inventory_from_order function itself will print detailed DEBUG messages
-                deplete_inventory_from_order(order_data, conn)
+                deplete_inventory_from_order(order_data)
 
                 # --- Post-depletion Inventory Check ---
                 print("\n--- Post-depletion Inventory Check ---")
@@ -109,4 +110,4 @@ def insert_orders_from_bot(order_data, conn):
         print(f"An error occurred while saving orders to MySQL: {err}")
     except Exception as e:
         print(f"An unexpected error occurred while saving orders: {e}")
-    rejected_items: list[tuple]
+    rejected_items: list[tuple] 

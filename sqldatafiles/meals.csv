@@ -1,101 +1,101 @@
-,meal_id,item_name,vegetarian,category,price,Chef_chef_id,description,type,
-0,1,Paneer Tikka,veg,Starter,550.0,103,Marinated paneer cubes grilled with spices and served with chutney.,starter,
-1,2,Vegetable Samosa,veg,Starter,200.5,102,Deep-fried pastry filled with spiced potatoes and peas.,snack,
-2,3,Onion Bhaji,veg,Starter,250.75,102,Spiced onion fritters made with gram flour and deep-fried.,snack,
-3,4,Hara Bhara Kebab,veg,Starter,325.2,102,Vegetable and spinach patties spiced and pan-fried.,starter,
-4,5,Gobi Manchurian,veg,Starter,400.0,101,Cauliflower florets fried and tossed in Indo-Chinese sauce.,starter,
-5,6,Crispy Corn,veg,Starter,280.9,102,Crispy fried corn kernels seasoned with spices.,snack,
-6,7,Dahi Ke Kebab,veg,Starter,450.3,103,Soft kebabs made from hung curd and mild spices.,starter,
-7,8,Aloo Tikki,veg,Starter,220.1,103,Shallow-fried potato patties spiced with herbs.,starter,
-8,9,Chicken Tikka,non-veg,Starter,600.0,102,Juicy chicken chunks marinated in spices and grilled.,starter,
-9,10,Seekh Kebab,non-veg,Starter,520.45,103,Minced meat skewers spiced and cooked in a tandoor.,starter,
-10,11,Fish Amritsari,non-veg,Starter,710.8,103,Batter-fried fish marinated with Amritsari spices.,starter,
-11,12,Prawn Fry,non-veg,Starter,680.15,101,Spiced prawns shallow fried until crispy.,starter,
-12,13,Mutton Shammi Kebab,non-veg,Starter,770.0,103,Minced mutton patties spiced and pan-fried.,starter,
-13,14,Chicken 65,non-veg,Starter,580.6,102,Spicy deep-fried chicken bites from South India.,starter,
-14,15,Chilli Chicken,non-veg,Starter,650.75,102,Chicken pieces tossed in spicy Indo-Chinese sauce.,starter,
-15,16,Tandoori Chicken,non-veg,Starter,800.0,101,"Whole chicken marinated in yogurt and spices, roasted in a tandoor.",starter,
-16,17,Dal Makhani,veg,Main Course,350.5,102,Creamy lentil dish cooked slowly with butter and spices.,dal,
-17,18,Palak Paneer,veg,Main Course,400.0,103,Paneer cubes cooked in spinach-based gravy.,sabzi,
-18,19,Chole Bhature,veg,Main Course,280.0,102,Chickpeas served with deep-fried fluffy bread.,sabzi,
-19,20,Malai Kofta,veg,Main Course,490.9,101,Paneer and potato dumplings in rich tomato-cream gravy.,sabzi,
-20,21,Aloo Gobi,veg,Main Course,220.3,101,Potato and cauliflower curry spiced with turmeric and cumin.,sabzi,
-21,22,Baingan Bharta,veg,Main Course,310.6,101,Smoky mashed roasted eggplant cooked with onions and spices.,sabzi,
-22,23,Bhindi Masala,veg,Main Course,275.5,102,Okra stir-fried with onions and Indian spices.,sabzi,
-23,24,Navratan Korma,veg,Main Course,530.0,101,"Rich curry made with mixed vegetables, nuts, and cream.",sabzi,
-24,25,Butter Chicken,non-veg,Main Course,750.25,103,Chicken cooked in creamy tomato-based sauce.,sabzi,
-25,26,Rogan Josh,non-veg,Main Course,820.7,103,Slow-cooked mutton curry from Kashmir with aromatic spices.,sabzi,
-26,27,Goan Fish Curry,non-veg,Main Course,690.0,101,Goan-style tangy fish curry with coconut and spices.,sabzi,
-27,28,Chicken Korma,non-veg,Main Course,780.45,103,Mildly spiced chicken curry with creamy gravy.,sabzi,
-28,29,Hyderabadi Biryani,non-veg,Main Course,880.1,102,Fragrant Hyderabadi rice dish cooked with meat and spices.,rice,
-29,30,Keema Matar,non-veg,Main Course,610.55,102,Minced mutton curry cooked with green peas.,sabzi,
-30,31,Chicken Tikka Masala,non-veg,Main Course,760.3,103,Grilled chicken tikka pieces simmered in spicy tomato gravy.,sabzi,
-31,32,Laal Maas,non-veg,Main Course,920.0,101,Fiery Rajasthani mutton curry with red chillies.,sabzi,
-32,33,Tandoori Roti,veg,Bread,50.0,101,Whole wheat flatbread cooked on a tandoor.,roti/bread,
-33,34,Butter Naan,veg,Bread,75.0,102,Soft flatbread brushed with butter.,roti/bread,
-34,35,Garlic Naan,veg,Bread,85.0,103,Naan bread flavored with garlic and butter.,roti/bread,
-35,36,Jeera Rice,veg,Rice,150.0,102,Fragrant basmati rice flavored with cumin seeds.,rice,
-36,37,Chicken Biryani,non-veg,Rice,550.0,101,Aromatic rice dish cooked with chicken and spices.,rice,
-37,38,Mutton Biryani,non-veg,Rice,650.0,103,Rich biryani made with marinated mutton and spices.,rice,
-38,39,Gulab Jamun,veg,Dessert,120.0,102,Deep-fried milk-solid dumplings soaked in sugar syrup.,sweet,
-39,40,Gajar Ka Halwa,veg,Dessert,140.0,101,"Grated carrot dessert cooked with milk, sugar, and ghee.",sweet,
-40,41,Kheer,veg,Dessert,110.0,103,Creamy rice pudding flavored with cardamom and nuts.,sweet,
-41,42,Masala Chai,veg,Beverage,60.0,101,Spiced Indian tea brewed with milk and aromatic spices.,beverage,
-42,43,Lassi,veg,Beverage,80.0,102,"Refreshing yogurt-based drink, sweet or salty.",beverage,
-43,44,Jaljeera,veg,Beverage,55.0,103,Tangy spiced drink made with cumin and herbs.,beverage,
-44,45,Rajma Chawal,veg,Main Course,290.0,101,Red kidney beans curry served with steamed rice.,rice,
-45,46,Kadhi Pakora,veg,Main Course,260.0,102,Chickpea flour dumplings in tangy yogurt-based curry.,sabzi,
-46,47,Missi Roti,veg,Bread,60.0,103,Spiced gram flour flatbread cooked on a griddle.,roti/bread,
-47,48,Aloo Paratha,veg,Bread,90.0,102,Stuffed flatbread filled with spiced mashed potatoes.,roti/bread,
-48,49,Paneer Paratha,veg,Bread,110.0,101,Stuffed flatbread filled with grated paneer.,roti/bread,
-49,50,Shahi Tukda,veg,Dessert,170.0,103,Rich Mughlai dessert of fried bread soaked in milk and sugar.,sweet,
-50,51,Fruit Cream,veg,Dessert,150.0,101,Whipped sweet cream mixed with seasonal fruits.,sweet,
-51,52,Pudina Chutney,veg,Accompaniment,40.0,102,Fresh mint chutney made with herbs and spices.,side,
-52,53,Raita,veg,Accompaniment,50.0,103,Yogurt-based side dish often mixed with vegetables or boondi.,side,
-53,54,Papad,veg,Accompaniment,25.0,101,Crispy lentil crackers served as a side snack.,side,
-54,55,Onion Salad,veg,Accompaniment,30.0,102,Sliced onions mixed with lemon and spices as a salad.,side,
-55,56,Tawa Roti,veg,Bread,40.0,103,Whole wheat flatbread cooked on a griddle.,roti/bread,
-56,57,Palak Ki Puri,veg,Bread,80.0,101,Deep-fried spinach puris served with curry.,roti/bread,
-57,58,Methi Paratha,veg,Bread,95.0,102,Spiced flatbread made with fenugreek leaves.,roti/bread,
-58,59,Aloo Chaat,veg,Starter,220.0,103,Spiced fried potato cubes served as a street snack.,snack,
-59,60,Pani Puri,veg,Starter,180.0,101,Crispy hollow puris filled with tangy water and stuffing.,snack,
-60,61,Dahi Vada,veg,Starter,200.0,102,Lentil fritters soaked in spiced yogurt.,snack,
-61,62,Bhel Puri,veg,Starter,190.0,103,Puffed rice snack mixed with chutneys and spices.,snack,
-62,63,Veg Fried Rice,veg,Rice,350.0,101,Stir-fried rice with vegetables and Indian spices.,Rice,
-63,64,Schezwan Fried Rice,veg,Rice,380.0,102,Spicy Indo-Chinese fried rice with schezwan sauce.,rice,
-64,65,Paneer Fried Rice,veg,Rice,420.0,103,Fried rice cooked with paneer and vegetables.,rice,
-65,66,Chicken Fried Rice,non-veg,Rice,450.0,101,Chinese-style fried rice with chicken and spices.,rice,
-66,67,Chicken Hakka Noodles,non-veg,Rice,470.0,102,Wok-tossed noodles with chicken and Indo-Chinese flavors.,main,
-67,68,Veg Hakka Noodles,veg,Rice,320.0,103,Stir-fried noodles with vegetables in Indo-Chinese style.,main,
-68,69,Gobi 65,veg,Starter,250.0,102,Spicy fried cauliflower similar to chicken 65.,starter,
-69,70,Pudina Paratha,veg,Bread,70.0,101,Layered flatbread flavored with mint.,roti/bread,
-70,71,Chur Chur Naan,veg,Bread,120.0,103,Flaky stuffed naan crushed and served with curry.,roti/bread,
-71,72,Amritsari Kulcha,veg,Bread,130.0,102,Stuffed flatbread from Amritsar served with butter.,roti/bread,
-72,73,Mushroom Curry,veg,Main Course,380.0,101,Mushrooms cooked in spiced Indian curry.,sabzi,
-73,74,Corn Palak,veg,Main Course,310.0,103,Spinach curry cooked with sweet corn.,sabzi,
-74,75,Mutter Paneer,veg,Main Course,390.0,102,Paneer cooked in tomato-onion gravy with peas.,sabzi,
-75,76,Dum Aloo,veg,Main Course,300.0,101,Baby potatoes cooked in rich spiced curry.,sabzi,
-76,77,Kashmiri Pulao,veg,Rice,280.0,103,Kashmiri-style sweet and aromatic rice with nuts and fruits.,rice,
-77,78,Veg Pulao,veg,Rice,250.0,102,Fragrant rice pilaf cooked with vegetables and spices.,rice,
-78,79,Egg Curry,non-veg,Main Course,320.0,101,Eggs simmered in spiced onion-tomato curry.,sabzi,
-79,80,Malabar Parotta,veg,Bread,65.0,103,Flaky layered bread from Kerala.,roti/bread,
-80,81,Coconut Rice,veg,Rice,270.0,102,Fragrant rice cooked with grated coconut.,rice,
-81,82,Tomato Rice,veg,Rice,240.0,101,Tangy rice dish made with tomatoes and spices.,rice,
-82,83,Lemon Rice,veg,Rice,230.0,103,Zesty rice flavored with lemon and curry leaves.,rice,
-83,84,Curd Rice,veg,Rice,210.0,102,Creamy yogurt rice tempered with spices.,rice,
-84,85,Masala Dosa,veg,Starter,150.0,101,Fermented rice-lentil crepe stuffed with spiced potato.,main,
-85,86,Idli Sambar,veg,Starter,120.0,103,Steamed rice cakes served with sambar.,starter,
-86,87,Medu Vada,veg,Starter,130.0,102,Lentil fritters deep-fried and served with chutney.,starter,
-87,88,Rasam,veg,Beverage,45.0,101,Tangy South Indian tamarind-based soup.,beverage,
-88,89,Sambar,veg,Accompaniment,60.0,103,Lentil-based vegetable stew with tamarind.,side,
-89,90,Utthapam,veg,Starter,140.0,102,Thick rice-lentil pancake topped with vegetables.,Starter,
-90,91,Appam,veg,Bread,70.0,101,Soft lacy pancakes from Kerala made with fermented batter.,roti/bread,
-91,92,Puttu,veg,Bread,85.0,103,Steamed rice flour cylinders served with curry.,roti/bread,
-92,93,Kadala Curry,veg,Main Course,280.0,102,Kerala-style black chickpea curry.,Sabzi,
-93,94,Avial,veg,Main Course,300.0,101,Kerala vegetable curry with coconut and yogurt.,sabzi,
-94,95,Kalan,veg,Main Course,290.0,103,Kerala-style yogurt curry with raw banana or yam.,sabzi,
-95,96,Pachadi,veg,Accompaniment,55.0,102,South Indian yogurt-based side dish with vegetables.,side,
-96,97,Thakkali Satham,veg,Rice,260.0,101,Tangy tomato rice from Tamil Nadu.,rice,
-97,98,Masala Bhindi,veg,Main Course,270.0,103,Spiced stir-fried okra dish.,sabzi,
-98,99,Thepla,veg,Bread,75.0,102,Gujarati flatbread flavored with spices and fenugreek.,roti/bread,
-99,100,Litti Chokha,veg,Main Course,330.0,101,Bihari dish of roasted wheat balls served with spiced mashed vegetables.,Sabzi,
+meal_id,item_name,type,category,price,Chef_chef_id
+1,Paneer Tikka,veg,Starter,550.00,103
+2,Vegetable Samosa,veg,Starter,200.50,102
+3,Onion Bhaji,veg,Starter,250.75,102
+4,Hara Bhara Kebab,veg,Starter,325.20,102
+5,Gobi Manchurian,veg,Starter,400.00,101
+6,Crispy Corn,veg,Starter,280.90,102
+7,Dahi Ke Kebab,veg,Starter,450.30,103
+8,Aloo Tikki,veg,Starter,220.10,103
+9,Chicken Tikka,non-veg,Starter,600.00,102
+10,Seekh Kebab,non-veg,Starter,520.45,103
+11,Fish Amritsari,non-veg,Starter,710.80,103
+12,Prawn Fry,non-veg,Starter,680.15,101
+13,Mutton Shammi Kebab,non-veg,Starter,770.00,103
+14,Chicken 65,non-veg,Starter,580.60,102
+15,Chilli Chicken,non-veg,Starter,650.75,102
+16,Tandoori Chicken,non-veg,Starter,800.00,101
+17,Dal Makhani,veg,Main Course,350.50,102
+18,Palak Paneer,veg,Main Course,400.00,103
+19,Chole Bhature,veg,Main Course,280.00,102
+20,Malai Kofta,veg,Main Course,490.90,101
+21,Aloo Gobi,veg,Main Course,220.30,101
+22,Baingan Bharta,veg,Main Course,310.60,101
+23,Bhindi Masala,veg,Main Course,275.50,102
+24,Navratan Korma,veg,Main Course,530.00,101
+25,Butter Chicken,non-veg,Main Course,750.25,103
+26,Rogan Josh,non-veg,Main Course,820.70,103
+27,Goan Fish Curry,non-veg,Main Course,690.00,101
+28,Chicken Korma,non-veg,Main Course,780.45,103
+29,Hyderabadi Biryani,non-veg,Main Course,880.10,102
+30,Keema Matar,non-veg,Main Course,610.55,102
+31,Chicken Tikka Masala,non-veg,Main Course,760.30,103
+32,Laal Maas,non-veg,Main Course,920.00,101
+33,Tandoori Roti,veg,Bread,50.00,101
+34,Butter Naan,veg,Bread,75.00,102
+35,Garlic Naan,veg,Bread,85.00,103
+36,Jeera Rice,veg,Rice,150.00,102
+37,Chicken Biryani,non-veg,Rice,550.00,101
+38,Mutton Biryani,non-veg,Rice,650.00,103
+39,Gulab Jamun,veg,Dessert,120.00,102
+40,Gajar Ka Halwa,veg,Dessert,140.00,101
+41,Kheer,veg,Dessert,110.00,103
+42,Masala Chai,veg,Beverage,60.00,101
+43,Lassi,veg,Beverage,80.00,102
+44,Jaljeera,veg,Beverage,55.00,103
+45,Rajma Chawal,veg,Main Course,290.00,101
+46,Kadhi Pakora,veg,Main Course,260.00,102
+47,Missi Roti,veg,Bread,60.00,103
+48,Aloo Paratha,veg,Bread,90.00,102
+49,Paneer Paratha,veg,Bread,110.00,101
+50,Shahi Tukda,veg,Dessert,170.00,103
+51,Fruit Cream,veg,Dessert,150.00,101
+52,Pudina Chutney,veg,Accompaniment,40.00,102
+53,Raita,veg,Accompaniment,50.00,103
+54,Papad,veg,Accompaniment,25.00,101
+55,Onion Salad,veg,Accompaniment,30.00,102
+56,Tawa Roti,veg,Bread,40.00,103
+57,Palak Ki Puri,veg,Bread,80.00,101
+58,Methi Paratha,veg,Bread,95.00,102
+59,Aloo Chaat,veg,Starter,220.00,103
+60,Pani Puri,veg,Starter,180.00,101
+61,Dahi Vada,veg,Starter,200.00,102
+62,Bhel Puri,veg,Starter,190.00,103
+63,Veg Fried Rice,veg,Rice,350.00,101
+64,Schezwan Fried Rice,veg,Rice,380.00,102
+65,Paneer Fried Rice,veg,Rice,420.00,103
+66,Chicken Fried Rice,non-veg,Rice,450.00,101
+67,Chicken Hakka Noodles,non-veg,Rice,470.00,102
+68,Veg Hakka Noodles,veg,Rice,320.00,103
+69,Gobi 65,veg,Starter,250.00,102
+70,Pudina Paratha,veg,Bread,70.00,101
+71,Chur Chur Naan,veg,Bread,120.00,103
+72,Amritsari Kulcha,veg,Bread,130.00,102
+73,Mushroom Curry,veg,Main Course,380.00,101
+74,Corn Palak,veg,Main Course,310.00,103
+75,Mutter Paneer,veg,Main Course,390.00,102
+76,Dum Aloo,veg,Main Course,300.00,101
+77,Kashmiri Pulao,veg,Rice,280.00,103
+78,Veg Pulao,veg,Rice,250.00,102
+79,Egg Curry,non-veg,Main Course,320.00,101
+80,Malabar Parotta,veg,Bread,65.00,103
+81,Coconut Rice,veg,Rice,270.00,102
+82,Tomato Rice,veg,Rice,240.00,101
+83,Lemon Rice,veg,Rice,230.00,103
+84,Curd Rice,veg,Rice,210.00,102
+85,Masala Dosa,veg,Starter,150.00,101
+86,Idli Sambar,veg,Starter,120.00,103
+87,Medu Vada,veg,Starter,130.00,102
+88,Rasam,veg,Beverage,45.00,101
+89,Sambar,veg,Accompaniment,60.00,103
+90,Utthapam,veg,Starter,140.00,102
+91,Appam,veg,Bread,70.00,101
+92,Puttu,veg,Bread,85.00,103
+93,Kadala Curry,veg,Main Course,280.00,102
+94,Avial,veg,Main Course,300.00,101
+95,Kalan,veg,Main Course,290.00,103
+96,Pachadi,veg,Accompaniment,55.00,102
+97,Thakkali Satham,veg,Rice,260.00,101
+98,Masala Bhindi,veg,Main Course,270.00,103
+99,Thepla,veg,Bread,75.00,102
+100,Litti Chokha,veg,Main Course,330.00,101
