@@ -4,7 +4,7 @@ from langchain.schema import Document
 
 def makeRetriever(menu, search_type="similarity", k=10):    
     docs = [
-        Document(page_content=f"{menu.iloc[i]['item_name']} - ${menu.iloc[i]['price']} ({menu.iloc[i]['category']})", metadata={"index":i})
+        Document(page_content=f"{menu.iloc[i]['item_name']} - ₹{menu.iloc[i]['price']} ({menu.iloc[i]['category']} | {menu.iloc[i]['vegetarian']} | {menu.iloc[i]['description']} | {menu.iloc[i]['type']} | {menu.iloc[i]['cuisine']} | {menu.iloc[i]['ingredients']})", metadata={"index":i})
         for i in range(len(menu))
     ]
 

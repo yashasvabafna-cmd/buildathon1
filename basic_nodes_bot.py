@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import os
 from dotenv import load_dotenv
 import warnings
@@ -21,7 +20,7 @@ from promptstore import orderPrompt, conversationPrompt, routerPrompt
 from classes import Item, Order, State
 from utils import makeRetriever
 from db_utils import get_ingredient_current_inventory, insert_orders_from_bot
-from nodes import router_node, extract_order_node, routeFunc, processOrder, menu_query_node, summary_node, confirm_order, clarify_options_node, deleteOrder, display_rejected, checkRejected
+from nodes import router_node, extract_order_node, routeFunc, processOrder, menu_query_node, summary_node, confirm_order, clarify_options_node, deleteOrder, display_rejected, checkRejected, modifyOrder
 
 import mysql.connector
 
@@ -52,7 +51,7 @@ if mysql_conn is None:
     print("FATAL: Database connection failed. Bot will not be able to save orders or deplete inventory.")
 
 parser = PydanticOutputParser(pydantic_object=Order)
-menu = pd.read_csv("sqldatafiles/meals.csv")
+menu = pd.read_csv("sqldatafiles/meals_new.csv")
 
 menu_searcher = MultiSearch(menu, bm_thresh= 0.01)
 
@@ -63,6 +62,9 @@ if LLM_NAME == "llama-local":
     llm = init_chat_model("ollama:llama3.1")
 elif LLM_NAME == "gpt-oss-120b-groq":
     llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model='openai/gpt-oss-120b')
+elif LLM_NAME == "gpt-oss-20b-groq":
+    llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model='openai/gpt-oss-20b')
+
 
 orderChain = orderPrompt | llm | parser
 conversationChain = conversationPrompt | llm
@@ -84,6 +86,7 @@ def makegraph():
     builder.add_node("menu_query", lambda s: menu_query_node(s, conversationChain, retriever))
     builder.add_node("process_order", lambda s: processOrder(s, menu_searcher, bm_searcher, vectordb, emb_thresh, seq_thresh))
     builder.add_node("delete_order", lambda s: deleteOrder(s, embedder, seq_thresh))
+    builder.add_node("modify_order", lambda s: modifyOrder(s, embedder, seq_thresh))
     builder.add_node("confirm_order", confirm_order)
     builder.add_node("display_rejected", display_rejected)
     builder.add_node("clarify_options", clarify_options_node)
@@ -98,7 +101,8 @@ def makegraph():
     )
     
     builder.add_edge("extract_order", "delete_order")
-    builder.add_edge("delete_order", "process_order")
+    builder.add_edge("delete_order", "modify_order")
+    builder.add_edge("modify_order", "process_order")
     builder.add_conditional_edges(
         "process_order",
         checkRejected, 
@@ -119,7 +123,7 @@ def makegraph():
 
 if __name__ == "__main__":
     graph = makegraph()
-    draw = True
+    draw = False
 
     if draw:
         ascii_rep = graph.get_graph().draw_ascii()
@@ -138,6 +142,10 @@ if __name__ == "__main__":
     try:
         while True:
             user_input = input("You: ")
+
+            if user_input.lower().strip() in {"exit", "bye", "quit", "q"}:
+                print("\nChatbot: Bye!")
+                break
 
             if user_input.lower().strip() in {"checkout", "confirm", "yes", "y"}:
                 current_cart = graph.get_state(config=config).values.get('cart', [])

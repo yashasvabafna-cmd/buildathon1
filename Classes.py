@@ -14,6 +14,7 @@ class Item(BaseModel):
 class Order(BaseModel):
     items: List[Item]
     delete: List[Item]
+    modify: List[Item]
 
 class OrderUpdate(BaseModel):
     def count_ordered_items(self, order: Order, menu: pd.DataFrame) -> pd.DataFrame:
