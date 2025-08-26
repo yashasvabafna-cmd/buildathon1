@@ -1,9 +1,15 @@
+from typing import Annotated
+from typing_extensions import TypedDict
 import pandas as pd
 import os
+import csv
+from datetime import datetime
+import json
 from dotenv import load_dotenv
-import warnings
 
 from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from operator import add
 
 from langchain.chat_models import init_chat_model
 from langchain_groq import ChatGroq
@@ -11,7 +17,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from langgraph.checkpoint.memory import MemorySaver
 
-from rank_bm25 import BM25Okapi
+#from rank_bm25 import BM25Okapi
 from searchers import MultiSearch
 from langchain_community.vectorstores import FAISS 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -32,9 +38,9 @@ warnings.filterwarnings("ignore")
 # Ensure these details match your 'restaurant_new_db' setup
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': '1234',
-    'database': 'restaurant_new_db'
+    'user': 'root',        # Your MySQL username
+    'password': '12345678', # Your MySQL password
+    'database': 'restaurant_new_db' # The database where 'Orders' table is
 }
 # ----------------------------------------------------
 
@@ -44,7 +50,7 @@ try:
     print("MySQL connection established for basic_nodes_bot.")
 except mysql.connector.Error as err:
     print(f"Error connecting to MySQL for basic_nodes_bot: {err}")
-    mysql_conn = None
+    mysql_conn = None # Set to None if connection fails
 
 # Check if DB connection failed
 if mysql_conn is None:
@@ -73,11 +79,12 @@ routerChain = routerPrompt | llm
 retriever = makeRetriever(menu, search_type="similarity", k=10)
 corpus = list(menu["item_name"])
 tcorpus = [c.lower().split() for c in corpus]
-bm_searcher = BM25Okapi(tcorpus)
+#bm_searcher = BM25Okapi(tcorpus)
 embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 vectordb = FAISS.from_texts(corpus, embedder)
 emb_thresh=0.5
 seq_thresh=0.5
+
 
 def makegraph():
     builder = StateGraph(State)

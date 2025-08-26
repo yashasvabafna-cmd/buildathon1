@@ -1,5 +1,5 @@
 ingredient_name,unit,current_inventory,order_date,reorder_level,supplier_id
-Paneer,kg,72.5,2025-08-19,18.13,Supplier001
+Paneer,kg,0.5,2025-08-19,18.13,Supplier001
 thick yogurt,L,2.4,2025-08-19,0.6,Supplier002
 ginger-garlic paste,ml,1500.0,2025-08-19,375.0,Supplier003
 turmeric,g,280.0,2025-08-19,70.0,Supplier001
