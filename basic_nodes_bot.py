@@ -26,7 +26,7 @@ from nodes import router_node, extract_order_node, routeFunc, processOrder, menu
 import mysql.connector
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-load_dotenv()#"keys.env")
+load_dotenv("keys.env")
 warnings.filterwarnings("ignore")
 
 # --- IMPORTANT: MySQL DB_CONFIG for basic_nodes_bot ---
