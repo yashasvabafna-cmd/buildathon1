@@ -85,7 +85,7 @@ def makegraph():
     builder.add_node("router", lambda s: router_node(s, routerChain))
     builder.add_node("extract_order", lambda s: extract_order_node(s, orderChain, parser))
     builder.add_node("menu_query", lambda s: menu_query_node(s, conversationChain, retriever))
-    builder.add_node("process_order", lambda s: processOrder(s, menu_searcher, bm_searcher, vectordb, emb_thresh, seq_thresh))
+    builder.add_node("process_order", lambda s: processOrder(s, menu_searcher, None, vectordb, emb_thresh, seq_thresh))
     builder.add_node("delete_order", lambda s: deleteOrder(s, embedder, seq_thresh))
     builder.add_node("modify_order", lambda s: modifyOrder(s, embedder, seq_thresh))
     builder.add_node("confirm_order", confirm_order)
