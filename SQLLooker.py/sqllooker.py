@@ -32,7 +32,7 @@ def display_table_contents(conn, table_name):
     cursor = conn.cursor()
     try:
         # Execute the query to select all data from the specified table
-        query = f"SELECT * FROM {table_name} limit 5;"
+        query = f"SELECT * FROM {table_name} ;"
         cursor.execute(query)
 
         # Fetch all the rows
@@ -61,13 +61,13 @@ if __name__ == '__main__':
     if conn:
         try:
             # Example: Display the 'Orders' table
-            display_table_contents(conn, 'Orders')
+            display_table_contents(conn, 'Order_Items')
 
             # You can call this function for other tables too:
             display_table_contents(conn, 'Meals')
             display_table_contents(conn, 'Ingredients')
-            # display_table_contents(conn, 'Suppliers')
-            # display_table_contents(conn, 'Recipes')
+            display_table_contents(conn, 'Suppliers')
+            #display_table_contents(conn, 'Recipes')
             display_table_contents(conn, 'Recipe_Ingredients')
         finally:
             conn.close()

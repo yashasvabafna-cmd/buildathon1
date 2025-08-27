@@ -20,12 +20,13 @@ from promptstore import orderPrompt, conversationPrompt, routerPrompt
 from Classes import Item, Order, State
 from utils import makeRetriever
 from db_utils import get_ingredient_current_inventory, insert_orders_from_bot
+from SQLFILE import deplete_inventory_from_order
 from nodes import router_node, extract_order_node, routeFunc, processOrder, menu_query_node, summary_node, confirm_order, clarify_options_node, deleteOrder, display_rejected, checkRejected, modifyOrder
 
 import mysql.connector
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-load_dotenv("keys.env")
+load_dotenv()#"keys.env")
 warnings.filterwarnings("ignore")
 
 # --- IMPORTANT: MySQL DB_CONFIG for basic_nodes_bot ---
@@ -151,7 +152,7 @@ if __name__ == "__main__":
             if user_input.lower().strip() in {"checkout", "confirm", "yes", "y"}:
                 current_cart = graph.get_state(config=config).values.get('cart', [])
                 if current_cart:
-                    insert_orders_from_bot(current_cart, mysql_conn) # Pass current_cart as order_data
+                    insert_orders_from_bot(current_cart, mysql_conn, deplete_inventory_from_order)
                     print("\nChatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
                     break
                 else:
