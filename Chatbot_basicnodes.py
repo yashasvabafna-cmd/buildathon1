@@ -4,7 +4,7 @@ import json
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from basic_nodes_bot import makegraph, insert_orders_from_bot
 from Classes import Item # Assuming Item class is defined in Classes.py
-
+from SQLFILE import deplete_inventory_from_order
 # --- IMPORTANT: MySQL DB_CONFIG for Streamlit App ---
 # Ensure these details match your 'restaurant_new_db' setup
 DB_CONFIG = {
@@ -95,7 +95,7 @@ def process_message(user_input: str):
     if user_input.lower().strip() in {"checkout", "confirm", "yes", "y"}:
         if st.session_state.cart:
             if st.session_state.mysql_conn:
-                insert_orders_from_bot(st.session_state.cart, st.session_state.mysql_conn)
+                insert_orders_from_bot(st.session_state.cart, st.session_state.mysql_conn,deplete_inventory_from_order)
                 full_response_content = "Order confirmed and will be sent to the Kitchen! Thank you."
                 ai_messages_for_display.append(AIMessage(content=full_response_content))
                 st.session_state.cart = [] # Clear cart after confirmation
