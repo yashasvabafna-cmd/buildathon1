@@ -3,7 +3,7 @@ import mysql.connector
 import json
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from basic_nodes_bot import makegraph, insert_orders_from_bot
-from classes import Item # Assuming Item class is defined in Classes.py
+from Classes import Item # Assuming Item class is defined in Classes.py
 from SQLFILE import deplete_inventory_from_order
 # --- IMPORTANT: MySQL DB_CONFIG for Streamlit App ---
 # Ensure these details match your 'restaurant_new_db' setup
