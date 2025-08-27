@@ -51,7 +51,7 @@ st.markdown("Monitor your **Orders** and **Ingredient Inventory** in real-time."
 st.header("🛒 Recent Orders")
 st.markdown("Details of all customer orders.")
 
-orders_df = fetch_data("Orders")
+orders_df = fetch_data("Order_Items")
 if not orders_df.empty:
     st.dataframe(orders_df)
     st.subheader("Order Statistics")

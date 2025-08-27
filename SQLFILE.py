@@ -854,6 +854,51 @@ def verify_purchase_orders():
         if conn and conn.is_connected():
             conn.close()
 
+def fetch_order_data_from_db():
+    """Fetches the latest order data from the Order_Items table and returns as a list of Item objects."""
+    conn = None
+    try:
+        conn = get_mysql_connection(database_name=NEW_DB_NAME)
+        if not conn:
+            print("Error: Could not connect to fetch order data from DB.")
+            return []
+
+        cursor = conn.cursor()
+        print("\n--- Fetching Latest Order from Database ---")
+        
+        # Find the most recent order_id
+        cursor.execute("SELECT DISTINCT order_id FROM Order_Items ORDER BY order_item_id DESC LIMIT 1")
+        latest_order_id = cursor.fetchone()
+        
+        if not latest_order_id:
+            print("  - No orders found in the database.")
+            return []
+
+        latest_order_id = latest_order_id[0]
+        
+        # Fetch all items for that order_id
+        order_query = """
+            SELECT m.name, oi.quantity
+            FROM Order_Items oi
+            JOIN Meals m ON oi.meal_id = m.meal_id
+            WHERE oi.order_id = %s;
+        """
+        cursor.execute(order_query, (latest_order_id,))
+        order_items_data = cursor.fetchall()
+        
+        # Convert the fetched data into a list of Item objects
+        customer_order_items = [Item(meal_name, quantity) for meal_name, quantity in order_items_data]
+        
+        print(f"  - Fetched {len(customer_order_items)} items for Order ID: {latest_order_id}")
+        return customer_order_items
+
+    except mysql.connector.Error as err:
+        print(f"Error fetching order data from DB: {err}")
+        return []
+    finally:
+        if conn and conn.is_connected():
+            conn.close()
+
 def main():
     """Main function to establish connection, create DB, create tables, and populate data."""
     conn_server = get_mysql_connection(database_name=None)
@@ -880,13 +925,13 @@ def main():
 
     print(f"\nSuccessfully created and populated database '{NEW_DB_NAME}'.")
 
-    print("\n--- Simulating a customer order ---")
-    customer_order = [
-        Item('Paneer Tikka', 1),
-        Item('Butter Chicken', 1),
-        Item('Gulab Jamun', 1)
-    ]
-    deplete_inventory_from_order(customer_order)
+    # --- Simulating a customer order by fetching from the Order_Items table ---
+    customer_order = fetch_order_data_from_db()
+    
+    if customer_order:
+        deplete_inventory_from_order(customer_order)
+    else:
+        print("\nNo order data to process for inventory depletion.")
     
     update_meal_availability() # Reflect depletion
 
