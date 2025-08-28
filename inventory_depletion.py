@@ -1,9 +1,11 @@
 import mysql.connector
 import json
 from datetime import datetime
-
+from dotenv import load_dotenv
+import os
+load_dotenv("keys.env")
 # Corrected: Import Item from Classes.py
-from Classes import Item # Assuming Item class is defined in Classes.py
+from classes import Item # Assuming Item class is defined in Classes.py
 
 # --- IMPORTANT: MySQL DB_CONFIG for inventory_depletion.py ---
 # Ensure these details match your 'restaurant_new_db' setup.
@@ -11,7 +13,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',        # Your MySQL username
     'password': '12345678', # Your MySQL password
-    'database': 'restaurant_new_db' # The database where 'Ingredients' and 'Recipe_Ingredients' tables are
+    'database': os.getenv('DB_NAME') # The database where 'Ingredients' and 'Recipe_Ingredients' tables are
 }
 # ----------------------------------------------------
 
