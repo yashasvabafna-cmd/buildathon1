@@ -5,13 +5,16 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from basic_nodes_bot import makegraph, insert_orders_from_bot
 from classes import Item # Assuming Item class is defined in Classes.py
 from SQLFILE import deplete_inventory_from_order
+from dotenv import load_dotenv
+import os
+load_dotenv("keys.env")
 # --- IMPORTANT: MySQL DB_CONFIG for Streamlit App ---
 # Ensure these details match your 'restaurant_new_db' setup
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',        # Your MySQL username
     'password': '12345678', # Your MySQL password
-    'database': 'restaurant_new_db' # The database where 'Orders' table is
+    'database': os.getenv('DB_NAME') # The database where 'Orders' table is
 }
 # ----------------------------------------------------
 

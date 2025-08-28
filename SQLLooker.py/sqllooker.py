@@ -1,4 +1,7 @@
 import mysql.connector
+from dotenv import load_dotenv
+import os
+load_dotenv("keys.env")
 
 # --- IMPORTANT: Configure your MySQL connection details here ---
 # Replace with your actual MySQL username, password, and database name.
@@ -7,7 +10,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'user': 'root', # Your MySQL username
     'password': '12345678', # Your MySQL password
-    'database': 'restaurant_newdb' # The name of the database created by the Canvas
+    'database': os.getenv('DB_NAME') # The name of the database created by the Canvas
 }
 # -------------------------------------------------------------
 

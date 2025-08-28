@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import mysql.connector
+from dotenv import load_dotenv
+import os
+load_dotenv("keys.env")
 
 # --- MySQL Database Configuration ---
 # Ensure these details match your 'restaurant_new_db' setup.
@@ -8,7 +11,7 @@ DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',         # Your MySQL username
     'password': '12345678',  # Your MySQL password
-    'database': 'restaurant_new_db' # The database to connect to
+    'database': os.getenv('DB_NAME') # The database to connect to
 }
 # ----------------------------------
 
