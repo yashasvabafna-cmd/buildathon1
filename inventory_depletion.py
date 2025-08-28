@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-load_dotenv("keys.env")
+load_dotenv()
 # Corrected: Import Item from Classes.py
 from Classes import Item # Assuming Item class is defined in Classes.py
 

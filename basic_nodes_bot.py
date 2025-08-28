@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 import warnings
+from db_utils import get_available_menu_meals, get_unavailable_meals
 
 from langgraph.graph import StateGraph, START, END
 
@@ -20,7 +21,7 @@ from promptstore import orderPrompt, conversationPrompt, routerPrompt
 from Classes import Item, Order, State
 from utils import makeRetriever
 from db_utils import get_ingredient_current_inventory, insert_orders_from_bot
-from SQLFILEBUILDER_FINAL import deplete_inventory_from_order
+from inventory_depletion import deplete_inventory_from_order
 from nodes import router_node, extract_order_node, routeFunc, processOrder, menu_query_node, summary_node, confirm_order, clarify_options_node, deleteOrder, display_rejected, checkRejected, modifyOrder
 
 import mysql.connector
@@ -151,13 +152,63 @@ if __name__ == "__main__":
 
             if user_input.lower().strip() in {"checkout", "confirm", "yes", "y"}:
                 current_cart = graph.get_state(config=config).values.get('cart', [])
+            
                 if current_cart:
-                    insert_orders_from_bot(current_cart, mysql_conn, deplete_inventory_from_order)
-                    print("\nChatbot: Order confirmed and will be sent to the Kitchen! Thank you.")
-                    break
+                    # Call insert_orders_from_bot and get its detailed result
+                    order_process_result = insert_orders_from_bot(current_cart, mysql_conn, deplete_inventory_from_order)
+                    if order_process_result["unavailable_meals"]:
+                        confirmation_message=[]
+                        unavailable_names = ", ".join([m['meal_name'] for m in order_process_result["unavailable_meals"]])
+                        confirmation_message += f"\nNote: The following meals are now unavailable due to ingredient shortages: {unavailable_names}."
+                        
+                    if order_process_result["success"]:
+                        confirmation_message = "\nChatbot: Order confirmed and will be sent to the Kitchen! Thank you."
+                    
+                        print(confirmation_message)
+                        
+                        # Reset the cart in the graph state for a new order
+                        # Also clear 'most_recent_order' to avoid lingering data
+                        graph.update_state(config, {"cart": [], "most_recent_order": None})
+                        
+                        # Explicitly display the updated menu after order confirmation
+                        # This directly invokes the logic from the menu_query_node (from your nodes.py)
+                        # to show both available and unavailable items.
+                        conn_for_menu = mysql_conn # Use the existing connection
+                        if conn_for_menu and conn_for_menu.is_connected():
+                            available_meals_after_order = get_available_menu_meals(conn_for_menu)
+                            unavailable_meals_after_order = get_unavailable_meals(conn_for_menu)
+
+                            menu_display_str = ""
+                            if available_meals_after_order:
+                                menu_display_str += "\nOur current menu includes:\n"
+                                for meal in available_meals_after_order:
+                                    menu_display_str += f"- {meal['meal_name']}\n"
+                            
+                            if unavailable_meals_after_order:
+                                if available_meals_after_order:
+                                    menu_display_str += "\n"
+                                menu_display_str += "Please note, the following meals are currently unavailable due to insufficient ingredients:\n"
+                                for meal in unavailable_meals_after_order:
+                                    menu_display_str += f"- {meal['meal_name']}\n"
+                            
+                            if not available_meals_after_order and not unavailable_meals_after_order:
+                                menu_display_str = "\nI'm sorry, I can't retrieve the menu right now. Please try again later."
+                            elif not available_meals_after_order and unavailable_meals_after_order:
+                                menu_display_str += "\nIs there anything else I can help you with?"
+                            else:
+                                menu_display_str += "\nWhat would you like to order next?"
+                            
+                            print(f"\nChatbot: {menu_display_str}")
+                        else:
+                            print("\nChatbot: I'm sorry, I can't display the updated menu. Database connection is not available.")
+                        
+                    else:
+                        print(f"Chatbot: There was an issue processing your order: {order_process_result.get('error', 'Unknown error')}. Please try again.")
+                    
                 else:
-                    print("Chatbot: Your cart is empty, nothing to save.")
-                    break
+                    print("Chatbot: Your cart is empty, nothing to save. Please add items before confirming.")
+                
+                continue # Continue the loop for next user input
                         
             for update in graph.stream({"messages": [HumanMessage(user_input)]}, config=config):
                 for step, output in update.items():

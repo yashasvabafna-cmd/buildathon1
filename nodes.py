@@ -3,6 +3,34 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from utils import get_context
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+import mysql.connector
+from dotenv import load_dotenv
+import os
+from db_utils import get_available_menu_meals, get_unavailable_meals
+
+load_dotenv("keys.env") # Load environment variables for DB_NAME
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',        # Your MySQL username
+    'password': '12345678', # Your MySQL password
+    'database': os.getenv('DB_NAME') # The database name from your .env file
+}
+
+# Establish MySQL connection for use within nodes.
+# This should ideally be a singleton or passed through the graph config.
+# For simplicity, establishing it here.
+_mysql_conn = None
+def get_db_connection():
+    global _mysql_conn
+    if _mysql_conn is None or not _mysql_conn.is_connected():
+        try:
+            _mysql_conn = mysql.connector.connect(**DB_CONFIG)
+            print("Successfully connected to MySQL database from nodes.py.")
+        except mysql.connector.Error as err:
+            print(f"Error connecting to MySQL from nodes.py: {err}")
+            _mysql_conn = None
+    return _mysql_conn
+
 
 def router_node(state: State, routerChain):
     """Routes user input to either order extraction or menu query."""
@@ -35,24 +63,50 @@ def extract_order_node(state: State, orderChain, parser):
         return {"messages": [AIMessage(content=f"Error parsing order: {str(e)}")]}
     
 def menu_query_node(state: State, conversationChain, retriever):
-    """Answers questions about the menu."""
-    messages = state["messages"]
-    for m in messages[::-1]:
-        if isinstance(m, HumanMessage):
-            user_input = m.content
-            # print(f"DEBUG - PROCESSING MESSAGE: ")
-            break
+    """
+    Answers questions about the menu, now showing both available and explicitly
+    listing unavailable items.
+    """
+    conn = get_db_connection() # Get the database connection
+    if conn and conn.is_connected():
+        available_meals = get_available_menu_meals(conn) 
+        unavailable_meals = get_unavailable_meals(conn)
+        menu_items_str = "" # Initialize empty string
 
-    # print(f"DEBUG - PROCESSING THIS MESSAGE - {user_input}")
-    
-    _, context = get_context(user_input, retriever)
-    ai_response = conversationChain.invoke({
-        "context": context,
-        "user_input": user_input,
-        "chat_history": messages
-    })
-    
-    return {"messages": [AIMessage(content=ai_response.content)]}
+        if available_meals:
+            menu_items_str += "Our current menu includes:\n" # Corrected: Removed duplicate "Our current menu includes:"
+            for meal in available_meals:
+                menu_items_str += f"- {meal['meal_name']}\n"
+        
+        if unavailable_meals:
+            if available_meals: # Add a separator if there were available meals
+                menu_items_str += "\n"
+            menu_items_str += "Please note, the following meals are currently unavailable due to insufficient ingredients:\n"
+            for meal in unavailable_meals:
+                menu_items_str += f"- {meal['meal_name']}"
+                # Optionally, list the specific missing ingredients for more detail
+                # if meal['missing_ingredients']:
+                #     missing_detail = ", ".join([
+                #         f"{ing['ingredient_name']} (needed: {ing['needed']:.2f} {ing['unit']})"
+                #         for ing in meal['missing_ingredients']
+                #     ])
+                #     menu_items_str += f" (Missing: {missing_detail})"
+                menu_items_str += "\n"
+        
+        if not available_meals and not unavailable_meals:
+            menu_items_str = "I'm sorry, I can't retrieve the menu right now. Please try again later."
+        elif not available_meals and unavailable_meals:
+             # This case means only unavailable meals are known
+             menu_items_str += "\nIs there anything else I can help you with?" # Adjusted prompt
+        else: # Both available and possibly unavailable
+            menu_items_str += "\nWhat would you like to order?"
+        
+        msg = AIMessage(content=menu_items_str, name="menu_query")
+        return {"messages": [msg]}
+    else:
+        error_msg = "I'm sorry, I can't fetch the menu right now. The database connection is not available."
+        print(f"Error in menu_query_node: {error_msg}")
+        return {"messages": [AIMessage(content=error_msg, name="menu_query_error")]}
 
 def routeFunc(state: State):
     internals = state["internals"]
@@ -409,4 +463,3 @@ def clarify_options_node(state: State):
         message = "There are no rejected items to clarify."
     
     return {"messages": [AIMessage(content=message)]}
-
