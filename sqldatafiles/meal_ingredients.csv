@@ -1,0 +1,874 @@
+meal_id,name,qty,unit
+1,paneer,250.0,g
+1,yogurt,240.0,ml
+1,ginger garlic paste,15.0,g
+1,turmeric,5.0,g
+1,red chili powder,5.0,g
+1,garam masala,5.0,g
+1,chaat masala,5.0,g
+1,lemon,15.0,ml
+1,onion,0.0,N/A
+1,bell pepper,0.0,N/A
+1,salt,0.0,N/A
+1,oil,30.0,ml
+2,all-purpose flour,480.0,g
+2,ghee,60.0,g
+2,salt,0.0,N/A
+2,water,0.0,N/A
+2,potatoes,0.0,N/A
+2,green peas,240.0,g
+2,onion,0.0,N/A
+2,ginger,5.0,g
+2,cumin seeds,5.0,g
+2,coriander powder,5.0,g
+2,turmeric,0.0,N/A
+2,red chili powder,0.0,N/A
+2,garam masala,0.0,N/A
+2,salt,0.0,N/A
+2,oil,0.0,N/A
+3,onions,0.0,N/A
+3,gram flour,240.0,g
+3,rice flour,60.0,g
+3,red chili powder,5.0,g
+3,turmeric,0.0,N/A
+3,ajwain,0.0,N/A
+3,coriander,30.0,g
+3,salt,0.0,N/A
+3,water,0.0,N/A
+3,oil,0.0,N/A
+4,spinach,240.0,g
+4,green peas,240.0,g
+4,potatoes,0.0,N/A
+4,breadcrumbs,60.0,g
+4,gram flour,30.0,g
+4,ginger,15.0,g
+4,green chilies,0.0,N/A
+4,chaat masala,0.0,N/A
+4,salt,0.0,N/A
+4,oil,0.0,N/A
+5,cauliflower,0.0,N/A
+5,all-purpose flour,240.0,g
+5,cornflour,60.0,g
+5,ginger garlic paste,5.0,g
+5,black pepper,5.0,g
+5,salt,0.0,N/A
+5,soy sauce,30.0,ml
+5,chili,15.0,ml
+5,vinegar,15.0,ml
+5,ginger,5.0,g
+5,garlic,5.0,g
+5,spring onion,0.0,N/A
+5,oil,0.0,N/A
+6,sweet corn,480.0,g
+6,cornflour,60.0,g
+6,rice flour,30.0,g
+6,black pepper,5.0,g
+6,red chili powder,0.0,N/A
+6,onion,0.0,N/A
+6,bell pepper,0.0,N/A
+6,salt,0.0,N/A
+6,oil,0.0,N/A
+7,yogurt,480.0,ml
+7,paneer,60.0,g
+7,gram flour,60.0,g
+7,onion,0.0,N/A
+7,ginger,15.0,g
+7,green chilies,0.0,N/A
+7,coriander,30.0,g
+7,salt,0.0,N/A
+7,pepper,0.0,N/A
+7,oil,0.0,N/A
+8,potatoes,0.0,N/A
+8,breadcrumbs,60.0,g
+8,cornflour,30.0,g
+8,ginger,5.0,g
+8,green chilies,0.0,N/A
+8,chaat masala,5.0,g
+8,red chili powder,0.0,N/A
+8,coriander,30.0,g
+8,salt,0.0,N/A
+8,oil,0.0,N/A
+9,boneless chicken,500.0,g
+9,yogurt,240.0,ml
+9,ginger garlic paste,15.0,g
+9,tandoori masala,30.0,g
+9,red chili powder,5.0,g
+9,turmeric,0.0,N/A
+9,lemon,15.0,ml
+9,salt,0.0,N/A
+9,mustard oil,30.0,ml
+10,minced meat,500.0,g
+10,onion,0.0,N/A
+10,ginger garlic paste,30.0,g
+10,green chilies,0.0,N/A
+10,coriander,60.0,g
+10,garam masala,5.0,g
+10,red chili powder,5.0,g
+10,gram flour,15.0,g
+10,salt,0.0,N/A
+10,butter,0.0,N/A
+11,fish,500.0,g
+11,lemon,15.0,ml
+11,ginger garlic paste,5.0,g
+11,salt,0.0,N/A
+11,gram flour,240.0,g
+11,rice flour,30.0,g
+11,ajwain,5.0,g
+11,red chili powder,5.0,g
+11,turmeric,0.0,N/A
+11,salt,0.0,N/A
+11,water,0.0,N/A
+11,oil,0.0,N/A
+12,prawns,500.0,g
+12,turmeric,5.0,g
+12,red chili powder,15.0,g
+12,ginger garlic paste,15.0,g
+12,lemon,15.0,ml
+12,black pepper,0.0,N/A
+12,rice flour,30.0,g
+12,salt,0.0,N/A
+12,oil,45.0,ml
+13,minced meat,500.0,g
+13,chana dal,120.0,g
+13,onion,0.0,N/A
+13,ginger,15.0,g
+13,garlic,0.0,N/A
+13,red chilies,0.0,N/A
+13,black pepper,0.0,N/A
+13,cloves,0.0,N/A
+13,black cardamom,0.0,N/A
+13,egg,0.0,N/A
+13,salt,0.0,N/A
+13,ghee,0.0,N/A
+14,boneless chicken,500.0,g
+14,ginger garlic paste,15.0,g
+14,red chili powder,15.0,g
+14,turmeric,0.0,N/A
+14,lemon,15.0,ml
+14,egg,0.0,N/A
+14,cornflour,30.0,g
+14,rice flour,30.0,g
+14,salt,0.0,N/A
+14,oil,30.0,ml
+14,curry leaves,0.0,N/A
+14,green chilies,0.0,N/A
+14,oil,0.0,N/A
+15,boneless chicken,500.0,g
+15,egg,0.0,N/A
+15,cornflour,0.0,N/A
+15,black pepper,5.0,g
+15,salt,0.0,N/A
+15,soy sauce,30.0,ml
+15,red chili sauce,15.0,ml
+15,vinegar,15.0,ml
+15,garlic,15.0,g
+15,ginger,15.0,g
+15,onion,0.0,N/A
+15,bell pepper,0.0,N/A
+15,oil,0.0,N/A
+16,whole chicken,1000.0,g
+16,yogurt,240.0,ml
+16,ginger garlic paste,30.0,g
+16,tandoori masala,0.0,N/A
+16,red chili powder,5.0,g
+16,turmeric,0.0,N/A
+16,lemon,15.0,ml
+16,mustard oil,30.0,ml
+16,salt,0.0,N/A
+16,red food coloring,0.0,N/A
+17,black lentils,240.0,g
+17,kidney beans,60.0,g
+17,onion,0.0,N/A
+17,tomatoes,0.0,N/A
+17,ginger garlic paste,30.0,g
+17,red chili powder,5.0,g
+17,butter,30.0,g
+17,cream,60.0,ml
+17,salt,0.0,N/A
+18,paneer,250.0,g
+18,spinach,100.0,g
+18,onion,0.0,N/A
+18,tomato,0.0,N/A
+18,ginger garlic paste,15.0,g
+18,cumin seeds,5.0,g
+18,turmeric,0.0,N/A
+18,red chili powder,5.0,g
+18,garam masala,0.0,N/A
+18,cream,30.0,ml
+18,oil,30.0,ml
+18,ghee,30.0,g
+18,salt,0.0,N/A
+19,chickpeas,240.0,g
+19,onion,0.0,N/A
+19,tomatoes,0.0,N/A
+19,ginger garlic paste,15.0,g
+19,chole masala,30.0,g
+19,tea,0.0,N/A
+19,all-purpose flour,480.0,g
+19,yogurt,120.0,ml
+19,sugar,5.0,g
+19,baking soda,0.0,N/A
+19,salt,0.0,N/A
+19,water,0.0,N/A
+19,oil,0.0,N/A
+20,paneer,200.0,g
+20,potatoes,0.0,N/A
+20,cornflour,30.0,g
+20,salt,0.0,N/A
+20,pepper,0.0,N/A
+20,nuts,0.0,N/A
+20,onions,0.0,N/A
+20,tomato puree,240.0,ml
+20,cashew,60.0,g
+20,cream,30.0,ml
+20,ginger garlic paste,5.0,g
+20,turmeric,0.0,N/A
+20,red chili powder,5.0,g
+20,garam masala,5.0,g
+20,oil,0.0,N/A
+21,potatoes,0.0,N/A
+21,cauliflower,0.0,N/A
+21,onion,0.0,N/A
+21,tomato,0.0,N/A
+21,cumin seeds,5.0,g
+21,ginger,5.0,g
+21,turmeric,0.0,N/A
+21,coriander powder,5.0,g
+21,red chili powder,0.0,N/A
+21,oil,45.0,ml
+21,salt,0.0,N/A
+22,eggplant,0.0,N/A
+22,onions,0.0,N/A
+22,tomatoes,0.0,N/A
+22,ginger garlic paste,15.0,g
+22,green chilies,0.0,N/A
+22,turmeric,0.0,N/A
+22,red chili powder,5.0,g
+22,garam masala,0.0,N/A
+22,oil,45.0,ml
+22,salt,0.0,N/A
+23,okra,500.0,g
+23,onions,0.0,N/A
+23,tomato,0.0,N/A
+23,cumin seeds,5.0,g
+23,turmeric,0.0,N/A
+23,coriander powder,5.0,g
+23,amchur,0.0,N/A
+23,red chili powder,0.0,N/A
+23,oil,45.0,ml
+23,salt,0.0,N/A
+24,mixed vegetables,480.0,g
+24,paneer,120.0,g
+24,cashews,60.0,g
+24,raisins,60.0,g
+24,onion,0.0,N/A
+24,cashew,120.0,g
+24,yogurt,60.0,ml
+24,cream,60.0,ml
+24,ginger garlic paste,5.0,g
+24,bay leaf,0.0,N/A
+24,cinnamon,0.0,N/A
+24,cloves,0.0,N/A
+24,garam masala,0.0,N/A
+24,oil,30.0,ml
+25,chicken tikka,500.0,g
+25,tomatoes,1000.0,g
+25,cashews,50.0,g
+25,butter,30.0,g
+25,ginger garlic paste,15.0,g
+25,red chili powder,5.0,g
+25,garam masala,0.0,N/A
+25,honey,30.0,ml
+25,sugar,30.0,g
+25,heavy cream,120.0,ml
+25,fenugreek,15.0,g
+25,salt,0.0,N/A
+26,mutton,500.0,g
+26,yogurt,120.0,ml
+26,onion,0.0,N/A
+26,ginger garlic paste,30.0,g
+26,red chili powder,60.0,g
+26,fennel,5.0,g
+26,ginger,0.0,N/A
+26,bay leaf,0.0,N/A
+26,cloves,0.0,N/A
+26,green cardamoms,0.0,N/A
+26,black cardamom,0.0,N/A
+26,cinnamon,0.0,N/A
+26,mustard oil,60.0,ml
+26,salt,0.0,N/A
+27,fish,500.0,g
+27,coconut,240.0,g
+27,red chilies,0.0,N/A
+27,coriander powder,5.0,g
+27,turmeric,0.0,N/A
+27,peppercorns,0.0,N/A
+27,tamarind,0.0,N/A
+27,onion,0.0,N/A
+27,oil,30.0,ml
+27,salt,0.0,N/A
+28,chicken,500.0,g
+28,yogurt,240.0,ml
+28,ginger garlic paste,15.0,g
+28,salt,0.0,N/A
+28,onions,0.0,N/A
+28,cashew,120.0,g
+28,red chili powder,5.0,g
+28,coriander powder,5.0,g
+28,garam masala,0.0,N/A
+28,bay leaf,0.0,N/A
+28,cinnamon,0.0,N/A
+28,cloves,0.0,N/A
+28,ghee,60.0,g
+29,chicken,500.0,g
+29,mutton,500.0,g
+29,basmati rice,480.0,g
+29,yogurt,240.0,ml
+29,ginger garlic paste,30.0,g
+29,red chili powder,15.0,g
+29,turmeric,5.0,g
+29,fried onions,240.0,g
+29,mint,120.0,g
+29,coriander,120.0,g
+29,lemon,0.0,N/A
+29,spices,0.0,N/A
+29,saffron,0.0,N/A
+29,milk,0.0,N/A
+29,ghee,0.0,N/A
+30,minced meat,500.0,g
+30,green peas,240.0,g
+30,onions,0.0,N/A
+30,tomatoes,0.0,N/A
+30,ginger garlic paste,15.0,g
+30,cumin seeds,5.0,g
+30,red chili powder,5.0,g
+30,coriander powder,5.0,g
+30,turmeric,0.0,N/A
+30,garam masala,0.0,N/A
+30,oil,45.0,ml
+31,chicken tikka,500.0,g
+31,onions,0.0,N/A
+31,tomatoes,0.0,N/A
+31,cashew,60.0,g
+31,ginger garlic paste,15.0,g
+31,red chili powder,5.0,g
+31,coriander powder,5.0,g
+31,turmeric,0.0,N/A
+31,garam masala,0.0,N/A
+31,cream,60.0,ml
+31,kasuri methi,0.0,N/A
+31,oil,45.0,ml
+32,mutton,500.0,g
+32,yogurt,240.0,ml
+32,red chilies,0.0,N/A
+32,onion,0.0,N/A
+32,garlic,15.0,g
+32,mustard oil,60.0,ml
+32,cloves,0.0,N/A
+32,black peppercorns,0.0,N/A
+32,cinnamon,0.0,N/A
+32,salt,0.0,N/A
+33,whole wheat flour,480.0,g
+33,salt,0.0,N/A
+33,yogurt,60.0,ml
+33,water,0.0,N/A
+34,all-purpose flour,480.0,g
+34,milk,120.0,ml
+34,yogurt,60.0,ml
+34,sugar,5.0,g
+34,baking soda,0.0,N/A
+34,yeast,5.0,g
+34,butter,30.0,g
+35,all-purpose flour,480.0,g
+35,milk,120.0,ml
+35,yogurt,60.0,ml
+35,yeast,5.0,g
+35,garlic,0.0,N/A
+35,coriander,30.0,g
+35,butter,0.0,N/A
+36,whole wheat flour,480.0,g
+36,ghee,0.0,N/A
+36,salt,0.0,N/A
+36,water,0.0,N/A
+37,gram flour,240.0,g
+37,whole wheat flour,240.0,g
+37,onion,0.0,N/A
+37,ajwain,0.0,N/A
+37,turmeric,0.0,N/A
+37,coriander,30.0,g
+37,ghee,0.0,N/A
+38,all-purpose flour,240.0,g
+38,whole wheat flour,240.0,g
+38,milk,120.0,ml
+38,salt,0.0,N/A
+38,water,0.0,N/A
+39,basmati rice,240.0,g
+39,water,480.0,ml
+39,salt,0.0,N/A
+40,basmati rice,240.0,g
+40,ghee,30.0,g
+40,cumin seeds,5.0,g
+40,bay leaf,0.0,N/A
+40,water,480.0,ml
+40,salt,0.0,N/A
+41,basmati rice,240.0,g
+41,mixed vegetables,240.0,g
+41,onion,0.0,N/A
+41,ghee,15.0,g
+41,oil,15.0,ml
+41,spices,0.0,N/A
+41,ginger garlic paste,5.0,g
+41,water,480.0,ml
+41,stock,480.0,ml
+42,basmati rice,240.0,g
+42,green peas,240.0,g
+42,onion,0.0,N/A
+42,ghee,15.0,g
+42,cumin seeds,5.0,g
+42,bay leaf,0.0,N/A
+42,cloves,0.0,N/A
+42,water,480.0,ml
+43,basmati rice,240.0,g
+43,nuts,60.0,g
+43,fruits,60.0,g
+43,saffron,0.0,N/A
+43,milk,0.0,N/A
+43,fennel,0.0,N/A
+43,ghee,30.0,g
+44,rice,480.0,g
+44,lemon,0.0,N/A
+44,oil,30.0,ml
+44,mustard seeds,5.0,g
+44,chana dal,5.0,g
+44,urad dal,5.0,g
+44,peanuts,30.0,g
+44,red chilies,0.0,N/A
+44,curry leaves,0.0,N/A
+44,turmeric,0.0,N/A
+44,asafoetida,0.0,N/A
+45,potatoes,0.0,N/A
+45,mustard seeds,5.0,g
+45,turmeric,0.0,N/A
+45,ginger,15.0,g
+45,garlic,15.0,g
+45,chili,15.0,g
+45,gram flour,0.0,N/A
+45,pav,0.0,N/A
+45,mint,0.0,N/A
+45,garlic,0.0,N/A
+45,chili,0.0,N/A
+46,potatoes,0.0,N/A
+46,cauliflower,240.0,g
+46,green peas,240.0,g
+46,onion,0.0,N/A
+46,tomatoes,0.0,N/A
+46,pav bhaji masala,30.0,g
+46,ginger garlic paste,15.0,g
+46,butter,60.0,g
+46,pav,0.0,N/A
+47,potatoes,480.0,g
+47,dabeli masala,30.0,g
+47,jaggery,5.0,g
+47,tamarind,5.0,g
+47,pav,0.0,N/A
+47,peanuts,120.0,g
+47,sev,120.0,g
+47,pomegranate seeds,0.0,N/A
+47,onion,0.0,N/A
+47,coriander,0.0,N/A
+48,puris,0.0,N/A
+48,mint,240.0,g
+48,coriander,120.0,g
+48,ginger,15.0,g
+48,green chili,5.0,g
+48,chaat masala,5.0,g
+48,cumin powder,5.0,g
+48,potatoes,0.0,N/A
+48,chickpeas,0.0,N/A
+48,moong,0.0,N/A
+49,white peas,240.0,g
+49,ginger,5.0,g
+49,turmeric,0.0,N/A
+49,cumin powder,5.0,g
+49,potatoes,0.0,N/A
+49,cornflour,30.0,g
+49,red chili powder,0.0,N/A
+49,onion,0.0,N/A
+49,tomatoes,0.0,N/A
+49,sev,0.0,N/A
+50,samosas,0.0,N/A
+50,chole,240.0,g
+50,yogurt,120.0,ml
+50,tamarind chutney,0.0,N/A
+50,mint,0.0,N/A
+50,sev,0.0,N/A
+50,onion,0.0,N/A
+50,pomegranate seeds,0.0,N/A
+51,all-purpose flour,240.0,g
+51,gram flour,15.0,g
+51,yogurt,60.0,ml
+51,baking powder,0.0,N/A
+51,water,0.0,N/A
+51,sugar,0.0,N/A
+51,water,0.0,N/A
+51,saffron,0.0,N/A
+51,oil,0.0,N/A
+52,khoya,240.0,g
+52,all-purpose flour,60.0,g
+52,baking soda,0.0,N/A
+52,milk,0.0,N/A
+52,sugar,0.0,N/A
+52,water,0.0,N/A
+52,cardamom,0.0,N/A
+52,oil,0.0,N/A
+53,carrots,1000.0,g
+53,khoya,500.0,g
+53,milk,1000.0,ml
+53,sugar,240.0,g
+53,ghee,120.0,g
+53,nuts,60.0,g
+53,cardamom,5.0,g
+54,milk,1000.0,ml
+54,lemon,0.0,N/A
+54,sugar,0.0,N/A
+54,water,0.0,N/A
+54,cardamom,0.0,N/A
+55,milk,1000.0,ml
+55,sugar,0.0,N/A
+55,cardamom,0.0,N/A
+55,pistachios,0.0,N/A
+55,almonds,0.0,N/A
+56,gram flour,480.0,g
+56,ghee,240.0,g
+56,sugar,240.0,g
+56,cardamom,5.0,g
+57,milk powder,480.0,g
+57,milk,120.0,ml
+57,sugar,240.0,g
+57,ghee,60.0,g
+57,cardamom,5.0,g
+57,pistachios,0.0,N/A
+58,bread,0.0,N/A
+58,sugar,240.0,g
+58,water,120.0,ml
+58,saffron,0.0,N/A
+58,condensed milk,240.0,ml
+58,nuts,0.0,N/A
+58,ghee,0.0,N/A
+59,almonds,240.0,g
+59,pistachios,60.0,g
+59,ghee,120.0,g
+59,sugar,240.0,g
+59,milk,120.0,ml
+59,cardamom,0.0,N/A
+60,milk,1000.0,ml
+60,lemon,0.0,N/A
+60,milk,1000.0,ml
+60,sugar,0.0,N/A
+60,cardamom,0.0,N/A
+60,saffron,0.0,N/A
+60,pistachios,0.0,N/A
+61,raw rice,480.0,g
+61,urad dal,240.0,g
+61,fenugreek,0.0,N/A
+61,salt,0.0,N/A
+61,oil,0.0,N/A
+62,idli rice,480.0,g
+62,urad dal,240.0,g
+62,fenugreek,0.0,N/A
+62,salt,0.0,N/A
+63,urad dal,240.0,g
+63,rice flour,60.0,g
+63,ginger,5.0,g
+63,chili,5.0,g
+63,black pepper,0.0,N/A
+63,cumin seeds,5.0,g
+63,salt,0.0,N/A
+63,oil,0.0,N/A
+64,dosa,480.0,g
+64,idli batter,480.0,g
+64,onion,0.0,N/A
+64,tomato,0.0,N/A
+64,carrot,0.0,N/A
+64,coriander,15.0,g
+64,oil,0.0,N/A
+65,raw rice,480.0,g
+65,urad dal,240.0,g
+65,fenugreek,0.0,N/A
+65,potatoes,0.0,N/A
+65,onion,0.0,N/A
+65,mustard seeds,5.0,g
+65,turmeric,0.0,N/A
+65,oil,0.0,N/A
+66,rice,240.0,g
+66,toor dal,120.0,g
+66,mixed vegetables,240.0,g
+66,bisi bele bhaat masala,30.0,g
+66,tamarind,15.0,g
+66,ghee,60.0,g
+66,salt,0.0,N/A
+67,toor dal,240.0,g
+67,mixed vegetables,240.0,g
+67,sambar powder,30.0,g
+67,tamarind,15.0,g
+67,mustard seeds,5.0,g
+67,oil,15.0,ml
+67,curry leaves,0.0,N/A
+67,asafoetida,0.0,N/A
+68,tomatoes,0.0,N/A
+68,tamarind,15.0,g
+68,rasam powder,15.0,g
+68,mustard seeds,5.0,g
+68,ghee,15.0,g
+68,curry leaves,0.0,N/A
+68,coriander,0.0,N/A
+69,urad dal,240.0,g
+69,ginger,5.0,g
+69,chili,5.0,g
+69,black peppercorns,5.0,g
+69,curry leaves,15.0,g
+69,salt,0.0,N/A
+69,oil,0.0,N/A
+70,whole wheat flour,480.0,g
+70,salt,0.0,N/A
+70,oil,5.0,ml
+70,water,0.0,N/A
+71,whole wheat flour,480.0,g
+71,salt,0.0,N/A
+71,water,0.0,N/A
+71,potatoes,0.0,N/A
+71,onion,0.0,N/A
+71,coriander,15.0,g
+71,garam masala,0.0,N/A
+71,red chili powder,0.0,N/A
+71,ghee,0.0,N/A
+72,whole wheat flour,480.0,g
+72,salt,0.0,N/A
+72,water,0.0,N/A
+72,cauliflower,0.0,N/A
+72,ginger garlic paste,5.0,g
+72,cumin powder,5.0,g
+72,turmeric,0.0,N/A
+72,ghee,0.0,N/A
+73,whole wheat flour,480.0,g
+73,fenugreek,240.0,g
+73,turmeric,0.0,N/A
+73,red chili powder,0.0,N/A
+73,ghee,0.0,N/A
+74,whole wheat flour,480.0,g
+74,salt,0.0,N/A
+74,water,0.0,N/A
+74,oil,0.0,N/A
+74,potatoes,0.0,N/A
+74,onion,0.0,N/A
+74,mustard seeds,5.0,g
+74,turmeric,0.0,N/A
+74,curry leaves,0.0,N/A
+75,gram flour,240.0,g
+75,yogurt,120.0,ml
+75,ginger,15.0,g
+75,chili,15.0,g
+75,sugar,5.0,g
+75,turmeric,0.0,N/A
+75,eno,5.0,g
+75,oil,30.0,ml
+75,mustard seeds,5.0,g
+75,sesame seeds,5.0,g
+75,curry leaves,0.0,N/A
+75,green chilies,0.0,N/A
+76,gram flour,240.0,g
+76,lemon,0.0,N/A
+76,ginger,5.0,g
+76,chili,5.0,g
+76,sugar,5.0,g
+76,eno,5.0,g
+76,oil,30.0,ml
+76,mustard seeds,5.0,g
+76,sesame seeds,5.0,g
+76,curry leaves,0.0,N/A
+76,coriander,0.0,N/A
+76,coconut,0.0,N/A
+77,whole wheat flour,240.0,g
+77,gram flour,120.0,g
+77,fenugreek,240.0,g
+77,yogurt,60.0,ml
+77,turmeric,0.0,N/A
+77,red chili powder,0.0,N/A
+77,asafoetida,0.0,N/A
+77,oil,0.0,N/A
+78,whole wheat flour,480.0,g
+78,sattu,240.0,g
+78,pickle masala,0.0,N/A
+78,mustard oil,0.0,N/A
+78,eggplant,0.0,N/A
+78,tomatoes,0.0,N/A
+78,potatoes,0.0,N/A
+78,onion,0.0,N/A
+78,garlic,0.0,N/A
+78,green chilies,0.0,N/A
+78,mustard oil,0.0,N/A
+79,water,480.0,ml
+79,milk,240.0,ml
+79,black tea,0.0,N/A
+79,ginger,15.0,g
+79,cardamom,0.0,N/A
+79,cloves,0.0,N/A
+79,cinnamon,0.0,N/A
+79,sugar,0.0,N/A
+80,yogurt,240.0,ml
+80,water,120.0,ml
+80,milk,120.0,ml
+80,sugar,0.0,N/A
+80,salt,0.0,N/A
+80,ice,0.0,N/A
+81,lemon,0.0,N/A
+81,sugar,15.0,g
+81,black salt,0.0,N/A
+81,cumin powder,0.0,N/A
+81,water,480.0,ml
+82,mint,240.0,g
+82,sugar,120.0,g
+82,black salt,0.0,N/A
+82,cumin powder,5.0,g
+82,lemon,0.0,N/A
+82,water,480.0,ml
+83,raw mangoes,0.0,N/A
+83,sugar,240.0,g
+83,cumin powder,5.0,g
+83,black salt,0.0,N/A
+83,water,480.0,ml
+84,mint,240.0,g
+84,ginger,15.0,g
+84,green chili,5.0,g
+84,cumin powder,5.0,g
+84,black salt,0.0,N/A
+84,amchur,5.0,g
+84,water,960.0,ml
+85,milk,500.0,ml
+85,almonds,60.0,g
+85,sugar,60.0,g
+85,saffron,0.0,N/A
+85,cardamom,0.0,N/A
+86,yogurt,240.0,ml
+86,water,240.0,ml
+86,cumin powder,0.0,N/A
+86,black salt,0.0,N/A
+86,ginger,0.0,N/A
+86,asafoetida,0.0,N/A
+87,mixed vegetables,240.0,g
+87,paneer,120.0,g
+87,breadcrumbs,60.0,g
+87,ginger garlic paste,5.0,g
+87,garam masala,0.0,N/A
+87,oil,0.0,N/A
+88,potatoes,0.0,N/A
+88,mixed vegetables,240.0,g
+88,breadcrumbs,30.0,g
+88,ginger,5.0,g
+88,turmeric,0.0,N/A
+88,coriander powder,5.0,g
+88,oil,0.0,N/A
+89,tomatoes,0.0,N/A
+89,onion,0.0,N/A
+89,garlic,0.0,N/A
+89,bay leaf,0.0,N/A
+89,sugar,5.0,g
+89,black pepper,0.0,N/A
+89,butter,15.0,g
+89,oil,15.0,ml
+90,mushrooms,250.0,g
+90,onion,0.0,N/A
+90,butter,30.0,g
+90,all-purpose flour,15.0,g
+90,milk,480.0,ml
+90,cream,60.0,ml
+90,black pepper,0.0,N/A
+91,mutton,500.0,g
+91,basmati rice,480.0,g
+91,yogurt,240.0,ml
+91,ginger garlic paste,30.0,g
+91,red chili powder,15.0,g
+91,turmeric,5.0,g
+91,fried onions,240.0,g
+91,saffron,0.0,N/A
+91,milk,0.0,N/A
+91,ghee,0.0,N/A
+92,chicken,500.0,g
+92,onions,0.0,N/A
+92,tomatoes,0.0,N/A
+92,ginger garlic paste,15.0,g
+92,red chili powder,15.0,g
+92,coriander powder,5.0,g
+92,turmeric,0.0,N/A
+92,garam masala,0.0,N/A
+92,oil,45.0,ml
+93,eggs,0.0,N/A
+93,onions,0.0,N/A
+93,tomatoes,0.0,N/A
+93,ginger garlic paste,15.0,g
+93,red chili powder,15.0,g
+93,coriander powder,5.0,g
+93,turmeric,0.0,N/A
+93,garam masala,0.0,N/A
+93,oil,45.0,ml
+94,paneer,250.0,g
+94,onions,0.0,N/A
+94,tomatoes,0.0,N/A
+94,cashew,60.0,g
+94,butter,30.0,g
+94,ginger garlic paste,15.0,g
+94,red chili powder,5.0,g
+94,garam masala,0.0,N/A
+94,cream,60.0,ml
+94,kasuri methi,0.0,N/A
+95,toor dal,240.0,g
+95,turmeric,0.0,N/A
+95,ghee,15.0,g
+95,cumin seeds,5.0,g
+95,red chilies,0.0,N/A
+95,asafoetida,0.0,N/A
+95,garlic,0.0,N/A
+96,kidney beans,240.0,g
+96,onions,0.0,N/A
+96,tomatoes,0.0,N/A
+96,ginger garlic paste,15.0,g
+96,rajma masala,15.0,g
+96,red chili powder,5.0,g
+96,oil,45.0,ml
+96,rice,0.0,N/A
+97,yogurt,240.0,ml
+97,gram flour,120.0,g
+97,ginger garlic paste,5.0,g
+97,turmeric,0.0,N/A
+97,gram flour,240.0,g
+97,red chili powder,0.0,N/A
+97,onions,0.0,N/A
+97,oil,0.0,N/A
+98,paneer,250.0,g
+98,green peas,240.0,g
+98,onions,0.0,N/A
+98,tomatoes,0.0,N/A
+98,ginger garlic paste,15.0,g
+98,red chili powder,5.0,g
+98,turmeric,0.0,N/A
+98,garam masala,0.0,N/A
+98,oil,45.0,ml
+99,whole wheat flour,240.0,g
+99,gram flour,120.0,g
+99,fenugreek,240.0,g
+99,yogurt,60.0,ml
+99,turmeric,0.0,N/A
+99,red chili powder,0.0,N/A
+99,asafoetida,0.0,N/A
+99,oil,0.0,N/A
+100,whole wheat flour,480.0,g
+100,sattu,240.0,g
+100,pickle masala,0.0,N/A
+100,mustard oil,0.0,N/A
+100,eggplant,0.0,N/A
+100,tomatoes,0.0,N/A
+100,potatoes,0.0,N/A
+100,onion,0.0,N/A
+100,garlic,0.0,N/A
+100,green chilies,0.0,N/A
+100,mustard oil,0.0,N/A

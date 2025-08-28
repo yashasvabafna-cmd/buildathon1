@@ -1,0 +1,147 @@
+ingredient_name,unit,current_inventory,order_date,reorder_level,supplier_id
+paneer,kg,40.581,2025-08-28,20.29,Supplier003
+yogurt,kg,95.318,2025-08-28,47.659,Supplier001
+ginger garlic paste,kg,74.539,2025-08-28,37.27,Supplier003
+turmeric,kg,61.873000000000005,2025-08-28,30.936,Supplier003
+red chili powder,kg,19.822,2025-08-28,9.911,Supplier001
+garam masala,kg,19.819,2025-08-28,9.91,Supplier001
+chaat masala,kg,10.518,2025-08-28,5.259,Supplier003
+lemon,kg,87.287,2025-08-28,43.644,Supplier002
+onion,kg,62.106,2025-08-28,31.053,Supplier003
+bell pepper,kg,72.267,2025-08-28,36.134,Supplier003
+salt,kg,2.2587759621256454,2025-08-28,0.5237503637435711,Supplier003
+oil,kg,97.141,2025-08-28,48.57,Supplier003
+all-purpose flour,kg,84.08200000000001,2025-08-28,42.041,Supplier001
+ghee,kg,25.172,2025-08-28,12.586,Supplier003
+water,kg,22.273,2025-08-28,11.136,Supplier002
+potatoes,kg,3.554922562221646,2025-08-28,1.942613406577219,Supplier001
+green peas,kg,33.903,2025-08-28,16.952,Supplier002
+ginger,kg,54.852,2025-08-28,27.426,Supplier002
+cumin seeds,kg,46.035,2025-08-28,23.018,Supplier002
+coriander powder,kg,32.667,2025-08-28,16.334,Supplier002
+onions,kg,4.933847862625513,2025-08-28,0.6234476104429283,Supplier001
+gram flour,kg,18.252,2025-08-28,9.126,Supplier001
+rice flour,kg,32.754000000000005,2025-08-28,16.377000000000002,Supplier002
+ajwain,kg,39.804,2025-08-28,19.902,Supplier002
+coriander,kg,48.327,2025-08-28,24.164,Supplier001
+spinach,kg,79.592,2025-08-28,39.796,Supplier001
+breadcrumbs,kg,23.969,2025-08-28,11.984,Supplier001
+green chilies,kg,53.852,2025-08-28,26.926,Supplier003
+cauliflower,kg,61.279,2025-08-28,30.64,Supplier003
+cornflour,kg,9.413,2025-08-28,4.706,Supplier003
+black pepper,kg,62.717,2025-08-28,31.358,Supplier002
+soy sauce,kg,21.2,2025-08-28,10.6,Supplier003
+chili,kg,11.18,2025-08-28,5.59,Supplier002
+vinegar,kg,95.144,2025-08-28,47.572,Supplier002
+garlic,kg,96.735,2025-08-28,48.368,Supplier003
+spring onion,kg,81.798,2025-08-28,40.899,Supplier002
+sweet corn,kg,33.938,2025-08-28,16.969,Supplier003
+pepper,kg,14.279,2025-08-28,7.140000000000001,Supplier003
+boneless chicken,kg,70.002,2025-08-28,35.001,Supplier001
+tandoori masala,kg,46.814,2025-08-28,23.407,Supplier003
+mustard oil,kg,16.594,2025-08-28,8.297,Supplier001
+minced meat,kg,52.042,2025-08-28,26.021,Supplier003
+butter,kg,0.1241656516896827,2025-08-28,0.1681049442963949,Supplier003
+fish,kg,91.385,2025-08-28,45.692,Supplier001
+prawns,kg,29.584,2025-08-28,14.791999999999998,Supplier001
+chana dal,kg,67.94,2025-08-28,33.97,Supplier003
+red chilies,kg,34.613,2025-08-28,17.306,Supplier002
+cloves,kg,54.40599999999999,2025-08-28,27.203,Supplier001
+black cardamom,kg,56.937,2025-08-28,28.468,Supplier002
+egg,kg,22.561,2025-08-28,11.28,Supplier002
+curry leaves,kg,97.111,2025-08-28,48.556,Supplier002
+red chili sauce,kg,78.638,2025-08-28,39.319,Supplier001
+whole chicken,kg,94.252,2025-08-28,47.126,Supplier002
+red food coloring,kg,90.009,2025-08-28,45.004000000000005,Supplier001
+black lentils,kg,61.8,2025-08-28,30.9,Supplier002
+kidney beans,kg,92.578,2025-08-28,46.289,Supplier003
+tomatoes,kg,1.909792084166541,2025-08-28,0.7482462989409724,Supplier003
+cream,kg,23.618,2025-08-28,11.809,Supplier001
+tomato,kg,9.297,2025-08-28,4.648,Supplier003
+chickpeas,kg,35.906,2025-08-28,17.953,Supplier003
+chole masala,kg,41.924,2025-08-28,20.962,Supplier002
+tea,kg,30.778,2025-08-28,15.389,Supplier001
+sugar,kg,10.8147555352684892,2025-08-28,5.9858215103432916,Supplier002
+baking soda,kg,38.892,2025-08-28,19.446,Supplier002
+nuts,kg,31.689,2025-08-28,15.844,Supplier002
+tomato puree,kg,56.556,2025-08-28,28.278,Supplier002
+cashew,kg,18.388,2025-08-28,9.194,Supplier002
+eggplant,kg,81.209,2025-08-28,40.604,Supplier002
+okra,kg,12.082,2025-08-28,6.041,Supplier002
+amchur,kg,98.754,2025-08-28,49.377,Supplier001
+mixed vegetables,kg,78.363,2025-08-28,39.182,Supplier003
+cashews,kg,23.878,2025-08-28,11.939,Supplier002
+raisins,kg,5.525,2025-08-28,2.762,Supplier002
+bay leaf,kg,82.46900000000001,2025-08-28,41.234,Supplier002
+cinnamon,kg,72.151,2025-08-28,36.076,Supplier002
+chicken tikka,kg,74.256,2025-08-28,37.128,Supplier002
+honey,kg,78.271,2025-08-28,39.136,Supplier002
+heavy cream,kg,12.034,2025-08-28,6.017,Supplier003
+fenugreek,kg,39.054,2025-08-28,19.527,Supplier003
+mutton,kg,16.008000000000003,2025-08-28,8.004000000000001,Supplier002
+fennel,kg,86.995,2025-08-28,43.498000000000005,Supplier003
+green cardamoms,kg,64.213,2025-08-28,32.106,Supplier001
+coconut,kg,36.435,2025-08-28,18.218,Supplier002
+peppercorns,kg,11.038,2025-08-28,5.519,Supplier001
+tamarind,kg,34.543,2025-08-28,17.272,Supplier001
+chicken,kg,35.892,2025-08-28,17.946,Supplier002
+basmati rice,kg,74.313,2025-08-28,37.156,Supplier003
+fried onions,kg,65.568,2025-08-28,32.784,Supplier001
+mint,kg,89.285,2025-08-28,44.642,Supplier002
+spices,kg,49.86,2025-08-28,24.93,Supplier001
+saffron,kg,16.361,2025-08-28,8.181000000000001,Supplier001
+milk,L,95.96199328718616,2025-08-28,26.01038985902159,Supplier001
+kasuri methi,kg,77.275,2025-08-28,38.638,Supplier001
+black peppercorns,kg,58.321000000000005,2025-08-28,29.160000000000004,Supplier003
+whole wheat flour,kg,78.24199999999999,2025-08-28,39.121,Supplier001
+yeast,kg,51.911,2025-08-28,25.956,Supplier001
+stock,kg,54.66,2025-08-28,27.33,Supplier001
+fruits,kg,45.616,2025-08-28,22.808,Supplier003
+rice,kg,7.415000000000001,2025-08-28,3.708,Supplier001
+mustard seeds,kg,15.25,2025-08-28,7.625,Supplier001
+urad dal,kg,7.986,2025-08-28,3.993,Supplier003
+peanuts,kg,65.459,2025-08-28,32.730000000000004,Supplier003
+asafoetida,kg,34.864,2025-08-28,17.432,Supplier003
+pav,kg,53.314,2025-08-28,26.657,Supplier001
+pav bhaji masala,kg,91.219,2025-08-28,45.61,Supplier003
+dabeli masala,kg,28.683,2025-08-28,14.342,Supplier003
+jaggery,kg,43.986,2025-08-28,21.993,Supplier001
+sev,kg,76.777,2025-08-28,38.388,Supplier003
+pomegranate seeds,kg,26.736,2025-08-28,13.368,Supplier001
+puris,kg,12.313,2025-08-28,6.156000000000001,Supplier002
+green chili,kg,32.526,2025-08-28,16.262999999999998,Supplier003
+cumin powder,kg,20.316,2025-08-28,10.158,Supplier002
+moong,kg,93.321,2025-08-28,46.66,Supplier001
+white peas,kg,81.771,2025-08-28,40.886,Supplier003
+samosas,kg,65.173,2025-08-28,32.586,Supplier001
+chole,kg,87.789,2025-08-28,43.894,Supplier002
+tamarind chutney,kg,81.349,2025-08-28,40.674,Supplier001
+baking powder,kg,22.724,2025-08-28,11.362,Supplier003
+khoya,kg,89.79299999999999,2025-08-28,44.896,Supplier003
+cardamom,kg,56.238,2025-08-28,28.119,Supplier002
+carrots,kg,2.570879822008262,2025-08-28,0.8381576652352015,Supplier001
+pistachios,kg,90.129,2025-08-28,45.064,Supplier003
+almonds,kg,35.21,2025-08-28,17.605,Supplier002
+milk powder,kg,15.455000000000002,2025-08-28,7.728,Supplier003
+bread,kg,26.654000000000003,2025-08-28,13.327000000000002,Supplier003
+condensed milk,kg,45.575,2025-08-28,22.788,Supplier001
+raw rice,kg,82.711,2025-08-28,41.356,Supplier003
+idli rice,kg,86.769,2025-08-28,43.384,Supplier001
+dosa,kg,5.66,2025-08-28,2.83,Supplier003
+idli batter,kg,53.521,2025-08-28,26.76,Supplier002
+carrot,kg,44.654,2025-08-28,22.327,Supplier003
+toor dal,kg,26.1,2025-08-28,13.05,Supplier001
+bisi bele bhaat masala,kg,16.387,2025-08-28,8.193999999999999,Supplier001
+sambar powder,kg,37.073,2025-08-28,18.536,Supplier002
+rasam powder,kg,94.576,2025-08-28,47.288,Supplier003
+eno,kg,35.704,2025-08-28,17.852,Supplier003
+sesame seeds,kg,54.285,2025-08-28,27.142000000000003,Supplier002
+sattu,kg,71.787,2025-08-28,35.894,Supplier003
+pickle masala,kg,39.545,2025-08-28,19.772,Supplier003
+black tea,kg,97.319,2025-08-28,48.66,Supplier001
+ice,kg,96.432,2025-08-28,48.216,Supplier003
+black salt,kg,28.919,2025-08-28,14.46,Supplier003
+raw mangoes,kg,52.239,2025-08-28,26.12,Supplier002
+mushrooms,kg,33.583,2025-08-28,16.791999999999998,Supplier002
+eggs,piece,1.3048349527286032,2025-08-28,1.369548619846404,Supplier001
+rajma masala,kg,8.504000000000001,2025-08-28,4.252000000000001,Supplier003

@@ -17,10 +17,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from promptstore import orderPrompt, conversationPrompt, routerPrompt
-from Classes import Item, Order, State
+from classes import Item, Order, State
 from utils import makeRetriever
 from db_utils import get_ingredient_current_inventory, insert_orders_from_bot
-from SQLFILE import deplete_inventory_from_order
+from SQLfileversionnew import deplete_inventory_from_order
 from nodes import router_node, extract_order_node, routeFunc, processOrder, menu_query_node, summary_node, confirm_order, clarify_options_node, deleteOrder, display_rejected, checkRejected, modifyOrder
 
 import mysql.connector
