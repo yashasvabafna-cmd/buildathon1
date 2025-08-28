@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv("keys.env")
 # Corrected: Import Item from Classes.py
-from classes import Item # Assuming Item class is defined in Classes.py
+from Classes import Item # Assuming Item class is defined in Classes.py
 
 # --- IMPORTANT: MySQL DB_CONFIG for inventory_depletion.py ---
 # Ensure these details match your 'restaurant_new_db' setup.

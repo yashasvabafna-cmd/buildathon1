@@ -17,7 +17,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
 from promptstore import orderPrompt, conversationPrompt, routerPrompt
-from classes import Item, Order, State
+from Classes import Item, Order, State
 from utils import makeRetriever
 from db_utils import get_ingredient_current_inventory, insert_orders_from_bot
 from SQLFILEBUILDER_FINAL import deplete_inventory_from_order
