@@ -150,7 +150,7 @@ def create_restaurant_tables():
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS Order_Items (
             order_item_id INT AUTO_INCREMENT PRIMARY KEY,
-            order_id INT NOT NULL,
+            order_id VARCHAR(75) NOT NULL,
             meal_id INT NOT NULL,
             quantity INT NOT NULL,
             FOREIGN KEY (meal_id) REFERENCES Meals(meal_id) ON DELETE CASCADE
