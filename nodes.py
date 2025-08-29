@@ -119,7 +119,7 @@ def routeFunc(state: State):
         return None
 
 # save static version
-# menuembeddings = embedder.encode(menu['item_name'].tolist())
+# \\menuembeddings = embedder.encode(menu['item_name'].tolist())
 # menuembeddings = menuembeddings/np.linalg.norm(menuembeddings, axis=1, keepdims=True)
 
 import numpy as np
