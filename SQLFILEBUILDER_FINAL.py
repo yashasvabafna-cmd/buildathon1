@@ -8,23 +8,36 @@ import time
 from decimal import Decimal
 
 from dotenv import load_dotenv
+
 load_dotenv("keys.env")
+import streamlit as st
+import mysql.connector
+
+# # conn = mysql.connector.connect(
+#     host=st.secrets["mysql"]["localhost"], # Must be your remote host
+#     database=st.secrets["mysql"][os.getenv('DB_NAME')],
+#     user=st.secrets["mysql"]["root"],
+#     password=st.secrets["mysql"]["12345678"]
+# )
+
 # --- IMPORTANT: Configure your MySQL connection details here ---
+NEW_DB_NAME = "restaurant_newdb"
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',        # Your MySQL username
-    'password': '12345678', # Your MySQL password
+    'host':st.secrets["mysql"]["host"], # Must be your remote host
+    'user':st.secrets["mysql"]["user"],
+    'password':st.secrets["mysql"]["password"]
 }
-NEW_DB_NAME = os.getenv('DB_NAME')
+  # Ensure this matches your MySQL setup
 # -------------------------------------------------------------
 
 def get_mysql_connection(database_name=NEW_DB_NAME):
     """Establishes a connection to the MySQL database."""
     try:
-        config = DB_CONFIG.copy()
         if database_name:
-            config['database'] = database_name
-        
+            DB_CONFIG['database'] = database_name
+        # else:
+        #     DB_CONFIG.pop('database', None)  # Remove database key if not specified
+        config = DB_CONFIG.copy()
         conn = mysql.connector.connect(**config)
         return conn
     except mysql.connector.Error as err:
