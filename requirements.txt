@@ -9,3 +9,7 @@ streamlit
 mysql-connector-python
 langchain-community
 langchain-huggingface 
+numpy
+pandas
+scipy
+scikit-learn 
