@@ -1,16 +1,13 @@
+# Core LangChain and LangGraph components
 langchain
+langchain-core
 langgraph
+
+# Dependencies from your log
 langsmith
 python-dotenv
 langchain-groq
-langchain_tavily
-sentence-transformers
+langchain-tavily
+
+# Add the package your application is built on
 streamlit
-mysql-connector-python
-langchain-community
-langchain-huggingface 
-numpy
-pandas
-scipy
-scikit-learn 
-faiss-cpu
