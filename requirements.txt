@@ -9,3 +9,4 @@ langchain_tavily
 # mcp
 streamlit
 mysql-connector-python
+langchain-community
