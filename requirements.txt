@@ -4,7 +4,7 @@ langsmith
 python-dotenv
 langchain-groq
 langchain_tavily
-
+sentence-transformers
 streamlit
 mysql-connector-python
 langchain-community
